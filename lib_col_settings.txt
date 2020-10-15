@@ -1,0 +1,40 @@
+# Column names of a spectral library required by Dream-DIA.
+
+# Notes:
+# 1. Dream-DIA is compatible with spectral libraries from spectraST by default.
+# 2. You can modify the right side of the following equals signs to specify the column names of your own spectral library.
+# 3. All the modifications in the spectral library must be in the UniMod format.
+
+####################################################
+#########   Modify the column names here   #########
+
+PRECURSOR_MZ_COL = PrecursorMz
+IRT_COL = Tr_recalibrated
+PRECURSOR_ID_COL = transition_group_id
+FULL_SEQUENCE_COL = FullUniModPeptideName
+PURE_SEQUENCE_COL = PeptideSequence
+PRECURSOR_CHARGE_COL = PrecursorCharge
+FRAGMENT_MZ_COL = ProductMz
+FRAGMENT_SERIES_COL = FragmentSeriesNumber
+FRAGMENT_CHARGE_COL = FragmentCharge
+FRAGMENT_TYPE_COL = FragmentType
+LIB_INTENSITY_COL = LibraryIntensity
+PROTEIN_NAME_COL = ProteinName
+
+#########   Modify the column names here   #########
+####################################################
+
+# Explanation and three examples for each item:
+
+# PRECURSOR_MZ_COL: m/z of precursors. (346.7; 455.8; 871.3)
+# IRT_COL: iRT of precursors. (-12.4; 3.82; 46.7)
+# PRECURSOR_ID_COL: unique IDs of precursors. Must be like this: XXX_SEQUENCEOFAPRECURSOR_CHARGE, where XXX can be anything. (8_AAAC(UniMod:4)PSGAEQGDAAGER_2; 11_AAADDGEEPKSEPETK_2; sdalkfjlsjd%&^@#$^&_AAAGAAAAAGGFQR_2)
+# FULL_SEQUENCE_COL: sequence of precursors with UniMod modifications. (AAAC(UniMod:4)PSGAEQGDAAGER; AAADDGEEPKSEPETK; AAAGAAAAAGGFQR)
+# PURE_SEQUENCE_COL: sequence of precursors without any modifications. (AAACPSGAEQGDAAGER; AAADDGEEPKSEPETK; AAAGAAAAAGGFQR)
+# PRECURSOR_CHARGE_COL: charges of precursors. (2; 3; 4)
+# FRAGMENT_MZ_COL: m/z values of fragment ions. (342.5; 1255.8; 333.8)
+# FRAGMENT_SERIES_COL: lengths of fragment ions. (10; 7; 5)
+# FRAGMENT_CHARGE_COL: charges of fragment ions. (1; 2; 2)
+# FRAGMENT_TYPE_COL: types of fragment ions. (y; b; y)
+# LIB_INTENSITY_COL: intensities of fragment ions. (7890.7; 3147.8; 5525.6)
+# PROTEIN_NAME_COL: full protein names. Must be like this: database|UniprotID|protein name. (sp|P23381|SYWC_HUMAN; sp|P42704|LPPRC_HUMAN; sp|P55012|S12A2_MOUSE)

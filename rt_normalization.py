@@ -153,7 +153,7 @@ def extract_irt_xics(ms1, ms2, win_range, extract_queue, precursor_list,
 
     extract_queue.put(None)
 
-def score_irt(extract_queue, BM_model_file, out_file_dir, n_threads, score_cutoff):
+def score_irt(extract_queue, BM_model_file, out_file_dir, n_threads, score_cutoff, seed):
     BM_model = load_model(BM_model_file, compile = False)
     irt_recas, rt_no1 = [], []
     none_count = 0
@@ -162,6 +162,7 @@ def score_irt(extract_queue, BM_model_file, out_file_dir, n_threads, score_cutof
         irt_data = extract_queue.get()
         if irt_data is None:
             none_count += 1
+            extract_queue.task_done()
             if none_count >= n_threads:
                 break
             else:
@@ -177,12 +178,16 @@ def score_irt(extract_queue, BM_model_file, out_file_dir, n_threads, score_cutof
 
         extract_queue.task_done()
 
+    sort_order = np.argsort(irt_recas)
+    irt_recas = list(np.array(irt_recas)[sort_order])
+    rt_no1 = list(np.array(rt_no1)[sort_order])
+
     if not os.path.exists(out_file_dir):
         os.mkdir(out_file_dir)
     with open(os.path.join(out_file_dir, "time_points.txt"), "w") as f:
-        f.writelines("%s\t%s\t" % (irt, rt) for (irt, rt) in zip(irt_recas, rt_no1))
+        f.writelines("%.5f\t%.2f\n" % (irt, rt) for (irt, rt) in zip(irt_recas, rt_no1))
 
-    lr_RAN = RANSACRegressor(LinearRegression())
+    lr_RAN = RANSACRegressor(LinearRegression(), random_state = seed)
     lr_RAN.fit(np.array(irt_recas).reshape(-1, 1), rt_no1)
     new_lr = LinearRegression()
     new_lr.fit(np.array(irt_recas).reshape(-1, 1)[lr_RAN.inlier_mask_], np.array(rt_no1)[lr_RAN.inlier_mask_])

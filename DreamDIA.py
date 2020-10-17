@@ -19,7 +19,7 @@ def print_version(ctx, param, value):
 @click.option("--lib", required = True, type = click.Path(exists = True), help = "File name of the spectral library. .tsv or .csv formats are supported.")
 @click.option("--win", required = True, type = click.Path(exists = True), help = "Window settings of the acquisition with no overlaps. Each row has two numbers that describe the start and the end of a window, which are separated by a tab.")
 @click.option("--out", required = True, type = click.Path(exists = False), help = "Directory for output files.")
-@click.option("--n_threads", default = 64, show_default = True, type = int, help = "Number of threads.")
+@click.option("--n_threads", default = 32, show_default = True, type = int, help = "Number of threads.")
 @click.option("--seed", default = 123, show_default = True, type = int, help = "Random seed for decoy generation.")
 @click.option("--mz_unit", default = "Da", show_default = True, type = click.Choice(['Da', 'ppm']), help = "m/z unit for m/z range and tolerance settings.")
 @click.option("--mz_min", default = "99", show_default = True, type = int, help = "Minimum of m/z value.")

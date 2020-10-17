@@ -60,9 +60,20 @@ class Precursor:
 
     def set_RT(self, k, b):
         self.RT = self.iRT * k + b
+
+    def clear(self):
+        self.ms1_areas = []
+        self.ms2_areas = []
+        self.lib_frags_real_intensities = []
     
     def __eq__(self, obj):
         return (self.full_sequence == obj.full_sequence) and (self.charge == obj.charge)
+
+    def __str__(self):
+        return self.full_sequence + "_" + str(self.charge)
+    
+    def __repr__(self):
+        return self.full_sequence + "_" + str(self.charge)
 
 def load_precursors(library, lib_cols, precursor_index, precursor_list, mz_min, mz_max, iso_range):
     for idx in precursor_index:
@@ -83,18 +94,13 @@ def load_precursors(library, lib_cols, precursor_index, precursor_list, mz_min, 
                                   list(library_part[lib_cols["LIB_INTENSITY_COL"]]))
         precursor_list.append(precursor_obj)
 
-def predict_RT(precursor_lists, irt_model_file):
-    file_handle = open(irt_model_file, "r")
-    irt_model = [float(v) for v in file_handle.read().splitlines()]
-    library["RT"] = library[lib_cols["IRT_COL"][0]] * irt_model[0] + irt_model[1]
-
 def extract_precursors(ms1, ms2, win_range, precursor_list, matrix_queue, 
                        n_cycles, model_cycles, mz_unit, mz_min, mz_max, mz_tol_ms1, mz_tol_ms2, iso_range, 
-                       n_lib_frags, n_self_frags, n_qt3_frags, n_ms1_frags, peak_index_range, slope, intercept): 
+                       n_lib_frags, n_self_frags, n_qt3_frags, n_ms1_frags, peak_index_range, slope, intercept, p_id): 
     peak_indice = get_peak_indice(model_cycles, peak_index_range)
     feature_dimension = n_lib_frags + n_self_frags + n_qt3_frags + n_ms1_frags
 
-    for precursor in precursor_list:
+    for idx, precursor in enumerate(precursor_list):
         precursor.set_RT(slope, intercept)
 
         precursor_win_id = calc_win_id(precursor.precursor_mz, win_range)
@@ -121,7 +127,6 @@ def extract_precursors(ms1, ms2, win_range, precursor_list, matrix_queue,
 
         for rt_start in range(n_cycles - model_cycles + 1):
             rt_end = rt_start + model_cycles
-
             precursor_rt_list_part = precursor_rt_list[rt_start : rt_end]
 
             lib_xics = all_lib_xics[:, rt_start : rt_end]
@@ -195,6 +200,7 @@ def extract_precursors(ms1, ms2, win_range, precursor_list, matrix_queue,
         matrix_queue.put([precursor, matrices, middle_rts, rt_lists, precursor_win_id, lib_pearsons])
    
     matrix_queue.put(None)
+    #print("%d extractor done!" % p_id)
 
 def score_batch(matrix_queue, lib_cols, BM_model_file, RM_model_file, out_file, rawdata_file, top_k, n_threads, batch_size, n_total_precursors, logger):
     BM_model = load_model(BM_model_file, compile = False)
@@ -223,6 +229,7 @@ def score_batch(matrix_queue, lib_cols, BM_model_file, RM_model_file, out_file, 
         matrix_data = matrix_queue.get()
         if matrix_data is None:
             n_none += 1
+            matrix_queue.task_done()
             if n_none >= n_threads:
                 break
             else:
@@ -381,5 +388,5 @@ def score_batch(matrix_queue, lib_cols, BM_model_file, RM_model_file, out_file, 
 
             batch_results.append(out_string % out_string_dict)
 
-    with open(out_file, "a") as v:
-        v.write("".join(batch_results))
+        with open(out_file, "a") as v:
+            v.write("".join(batch_results))

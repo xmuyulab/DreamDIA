@@ -113,13 +113,13 @@ def dream_score(file_dir, lib, win, out, n_threads, seed, mz_unit, mz_min, mz_ma
             p = multiprocessing.Process(target = extract_irt_xics, 
                                         args = (ms1, ms2, win_range, extract_queue, [irt_precursors[i] for i in coord], 
                                                 model_cycles, mz_unit, mz_min, mz_max, mz_tol_ms1, mz_tol_ms2, iso_range, 
-                                                n_lib_frags, n_self_frags, n_qt3_frags, n_ms1_frags, ))                              
+                                                n_lib_frags, n_self_frags, n_qt3_frags, n_ms1_frags, ))                        
             p.daemon = True
             extractors.append(p)
             p.start()
 
         scorer = multiprocessing.Process(target = score_irt, args = (extract_queue, BM_model_file, rt_norm_dir, 
-                                                                     n_threads, score_cutoff, ))
+                                                                     n_threads, score_cutoff, seed, ))
         scorer.start()
 
         for p in extractors:
@@ -136,12 +136,13 @@ def dream_score(file_dir, lib, win, out, n_threads, seed, mz_unit, mz_min, mz_ma
         dream_score_res_file = os.path.join(out, rawdata_prefix + "_" + os.path.basename(lib)[:-4] + ".dream_score.tsv")
         matrix_queue = multiprocessing.JoinableQueue(256)
         extractors = []
+
         for i in range(n_threads):
             p = multiprocessing.Process(target = extract_precursors, 
                                         args = (ms1, ms2, win_range, precursor_lists[i], matrix_queue, 
                                                 n_cycles, model_cycles, mz_unit, mz_min, mz_max, mz_tol_ms1, 
                                                 mz_tol_ms2, iso_range, n_lib_frags, n_self_frags, 
-                                                n_qt3_frags, n_ms1_frags, peak_index_range, slope, intercept, ))
+                                                n_qt3_frags, n_ms1_frags, peak_index_range, slope, intercept, i, ))    
             p.daemon = True
             extractors.append(p)
             p.start()
@@ -165,6 +166,10 @@ def dream_score(file_dir, lib, win, out, n_threads, seed, mz_unit, mz_min, mz_ma
             disc_dir = os.path.join(out, rawdata_prefix + "_" + os.path.basename(lib)[:-4] + "_dream_prophet")
             dream_score_res = pd.read_csv(dream_score_res_file, sep = "\t")
             dream_prophet(dream_score_res, lib_cols, disc_model, top_k, n_threads, seed, dream_indicators, disc_dir, logger, fdr_precursor, fdr_protein)
+
+        for precursor_list in precursor_lists:
+            for precursor in precursor_list:
+                precursor.clear()
     
     if prophet_mode == "global":
         logger.info("Build discriminant model...")

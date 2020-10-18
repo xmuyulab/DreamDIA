@@ -1,17 +1,13 @@
-import sys
 import os
-import re
-import os.path
-import bisect
-import logging
 import numpy as np
-import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 import tensorflow as tf
 from keras.models import load_model
 
 from utils import *
 from mz_calculator import calc_all_fragment_mzs
+
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
 class Lib_frag:
     def __init__(self, mz, charge, fragtype, series, intensity):
@@ -156,20 +152,32 @@ def extract_precursors(ms1, ms2, win_range, precursor_list, matrix_queue,
             peak_intensities = lib_xics[:, peak_indice].mean(axis = 1)
             precursor.lib_frags_real_intensities.append(peak_intensities)
 
-            pearson_matrix = np.corrcoef(lib_xics)
-            pearson_matrix[np.isnan(pearson_matrix)] = 0
-            pearson_sums = pearson_matrix.sum(axis = 1)
-            lib_pearsons.append(list(pearson_sums))
-            lib_xics = lib_xics[np.argsort(-pearson_sums), :]
+            lib_xics_std = lib_xics.std(axis = 1)
+            std_indice = np.where(lib_xics_std != 0)[0]
+            pearson_sums = [0] * len(lib_xics_std)
+            if len(std_indice) == 1:
+                pearson_sums[std_indice[0]] = 1               
+            elif len(std_indice) > 1:
+                lib_xics_for_pearson = lib_xics[std_indice, :]
+                pearson_matrix = np.corrcoef(lib_xics_for_pearson)
+                pearson_sums_part = pearson_matrix.sum(axis = 1)
+                for std_index, pearson_sum in zip(std_indice, pearson_sums_part):
+                    pearson_sums[std_index] = pearson_sum            
+            lib_pearsons.append(pearson_sums)
+            lib_xics = lib_xics[np.argsort(-np.array(pearson_sums)), :]
 
-            if self_xics.shape[0] > 0:
+            self_xics_std = self_xics.std(axis = 1)
+            self_xics = self_xics[self_xics_std != 0, ]
+            qt3_xics_std = qt3_xics.std(axis = 1)
+            qt3_xics = qt3_xics[qt3_xics_std != 0, ]
+
+            if self_xics.shape[0] > 1 and len(std_indice) >= 1:
                 self_pearson = np.corrcoef(self_xics, lib_xics[0, :])
-                self_pearson[np.isnan(self_pearson)] = 0 
                 self_pearson = self_pearson[0, :][:-1]
                 self_xics = self_xics[np.argsort(-self_pearson), :]
-            if qt3_xics.shape[0] > 0:
+
+            if qt3_xics.shape[0] > 1 and len(std_indice) >= 1:
                 qt3_pearson = np.corrcoef(qt3_xics, lib_xics[0, :])
-                qt3_pearson[np.isnan(qt3_pearson)] = 0 
                 qt3_pearson = qt3_pearson[0, :][:-1]
                 qt3_xics = qt3_xics[np.argsort(-qt3_pearson), :]
 
@@ -200,7 +208,6 @@ def extract_precursors(ms1, ms2, win_range, precursor_list, matrix_queue,
         matrix_queue.put([precursor, matrices, middle_rts, rt_lists, precursor_win_id, lib_pearsons])
    
     matrix_queue.put(None)
-    #print("%d extractor done!" % p_id)
 
 def score_batch(matrix_queue, lib_cols, BM_model_file, RM_model_file, out_file, rawdata_file, top_k, n_threads, batch_size, n_total_precursors, logger):
     BM_model = load_model(BM_model_file, compile = False)
@@ -208,16 +215,14 @@ def score_batch(matrix_queue, lib_cols, BM_model_file, RM_model_file, out_file, 
     BM_model.call = tf.function(BM_model.call, experimental_relax_shapes = True)
     RM_model.call = tf.function(RM_model.call, experimental_relax_shapes = True)
 
-    out_f = open(out_file, "w")
     out_head_1 = "%s\tfilename\tRT\t%s\t%s\t" % (lib_cols["PRECURSOR_ID_COL"], lib_cols["PURE_SEQUENCE_COL"], lib_cols["FULL_SEQUENCE_COL"])
     out_head_2 = "%s\t%s\t%s\t%s\tassay_rt\tdelta_rt\t" % (lib_cols["PRECURSOR_CHARGE_COL"], lib_cols["PRECURSOR_MZ_COL"], lib_cols["PROTEIN_NAME_COL"], lib_cols["DECOY_OR_NOT_COL"])
     out_head_3 = "%s\tnr_peaks\treal_intensities\tlib_cos_scores\t" % lib_cols["IRT_COL"]
-    out_head_4 = "dream_scores\tms1_area\tms2_areas\taggr_Fragment_Annotation\tlib_pearsons\taux_scores\n"
-    out_f.write(out_head_1 + out_head_2 + out_head_3 + out_head_4)
-    out_f.close()
+    out_head_4 = "dream_scores\tms1_area\tms2_areas\taggr_Fragment_Annotation\tlib_pearsons\tdrf_scores\n"
 
     n_none = 0
     precursor_count = 0
+    results = []
 
     # save data in batch
     batch_precursor = []
@@ -247,16 +252,15 @@ def score_batch(matrix_queue, lib_cols, BM_model_file, RM_model_file, out_file, 
         matrix_queue.task_done()
 
         if precursor_count % 10000 == 0:
-            logger.info("(%d / %d) precursors processed ..." % (precursor_count, n_total_precursors))
+            logger.info("(%d / %d) precursors scored ..." % (precursor_count, n_total_precursors))
 
         if precursor_count % batch_size == 0:
-            batch_results = []
             batch_matrices = np.concatenate(batch_matrices)
             batch_scores = BM_model(batch_matrices, training = False).numpy().T[0]
-            batch_aux_scores = RM_model(batch_matrices, training = False).numpy()
+            batch_drf_scores = RM_model(batch_matrices, training = False).numpy()
 
             batch_scores = np.split(batch_scores, batch_size)           
-            batch_aux_scores = np.split(batch_aux_scores, batch_size)
+            batch_drf_scores = np.split(batch_drf_scores, batch_size)
 
             for pidx in range(batch_size):
                 # retrieve data for current precursor
@@ -265,7 +269,7 @@ def score_batch(matrix_queue, lib_cols, BM_model_file, RM_model_file, out_file, 
                 lib_pearsons = batch_lib_pearsons[pidx]
 
                 scores = batch_scores[pidx]
-                aux_scores = batch_aux_scores[pidx]
+                drf_scores = batch_drf_scores[pidx]
                 score_order = np.argsort(-np.array(scores))[:top_k]
                 
                 # preparing outputs
@@ -280,7 +284,7 @@ def score_batch(matrix_queue, lib_cols, BM_model_file, RM_model_file, out_file, 
                 ms2_area_kept = list(np.array(precursor.ms2_areas)[score_order])
                 frag_kept = [i.format_output() for i in precursor.lib_frags]
                 lib_pearsons_kept = ["|".join([str(k) for k in lib_pearsons[idx]]) for idx in score_order]
-                aux_scores_kept = ["|".join([str(k) for k in i]) for i in list(aux_scores[score_order])]
+                drf_scores_kept = ["|".join([str(k) for k in i]) for i in list(drf_scores[score_order])]
         
                 out_string_dict = {"transition_group_id" : precursor.precursor_id, 
                            "filename" : rawdata_file, 
@@ -302,19 +306,16 @@ def score_batch(matrix_queue, lib_cols, BM_model_file, RM_model_file, out_file, 
                            "ms2_area" : ";".join(ms2_area_kept), 
                            "aggr_Fragment_Annotation" : ";".join(frag_kept), 
                            "lib_pearsons" : ";".join(lib_pearsons_kept), 
-                           "aux_scores" : ";".join(aux_scores_kept)}
+                           "drf_scores" : ";".join(drf_scores_kept)}
                 out_string_1 = "%(transition_group_id)s\t%(filename)s\t%(RT)s\t"
                 out_string_2 = "%(PeptideSequence)s\t%(FullPeptideName)s\t%(Charge)s\t"
                 out_string_3 = "%(m/z)s\t%(ProteinName)s\t%(decoy)s\t"
                 out_string_4 = "%(assay_rt)s\t%(delta_rt)s\t%(norm_rt)s\t"
                 out_string_5 = "%(nr_peaks)s\t%(real_intensities)s\t%(lib_cos_scores)s\t"
-                out_string_6 = "%(dream_scores)s\t%(ms1_area)s\t%(ms2_area)s\t%(aggr_Fragment_Annotation)s\t%(lib_pearsons)s\t%(aux_scores)s\n"
+                out_string_6 = "%(dream_scores)s\t%(ms1_area)s\t%(ms2_area)s\t%(aggr_Fragment_Annotation)s\t%(lib_pearsons)s\t%(drf_scores)s\n"
                 out_string = out_string_1 + out_string_2 + out_string_3 + out_string_4 + out_string_5 + out_string_6   
 
-                batch_results.append(out_string % out_string_dict)
-
-            with open(out_file, "a") as v:
-                v.write("".join(batch_results))
+                results.append(out_string % out_string_dict)
             
             batch_precursor = []
             batch_matrices = []
@@ -324,14 +325,13 @@ def score_batch(matrix_queue, lib_cols, BM_model_file, RM_model_file, out_file, 
     # process last batch if not empty
     n_samples = len(batch_precursor)
     if n_samples:
-        batch_results = []
         batch_matrices = np.concatenate(batch_matrices)
         
         batch_scores = BM_model(batch_matrices, training = False).numpy().T[0]
-        batch_aux_scores = RM_model(batch_matrices, training = False).numpy()
+        batch_drf_scores = RM_model(batch_matrices, training = False).numpy()
 
         batch_scores = np.split(batch_scores, n_samples)
-        batch_aux_scores = np.split(batch_aux_scores, n_samples)
+        batch_drf_scores = np.split(batch_drf_scores, n_samples)
 
         for pidx in range(n_samples):
             # retrieve data for current precursor
@@ -340,7 +340,7 @@ def score_batch(matrix_queue, lib_cols, BM_model_file, RM_model_file, out_file, 
             lib_pearsons = batch_lib_pearsons[pidx]
 
             scores = batch_scores[pidx]
-            aux_scores = batch_aux_scores[pidx]
+            drf_scores = batch_drf_scores[pidx]
             score_order = np.argsort(-np.array(scores))[:top_k]
             
             # preparing outputs
@@ -355,7 +355,7 @@ def score_batch(matrix_queue, lib_cols, BM_model_file, RM_model_file, out_file, 
             ms2_area_kept = list(np.array(precursor.ms2_areas)[score_order])
             frag_kept = [i.format_output() for i in precursor.lib_frags]
             lib_pearsons_kept = ["|".join([str(k) for k in lib_pearsons[idx]]) for idx in score_order]
-            aux_scores_kept = ["|".join([str(k) for k in i]) for i in list(aux_scores[score_order])]
+            drf_scores_kept = ["|".join([str(k) for k in i]) for i in list(drf_scores[score_order])]
     
             out_string_dict = {"transition_group_id" : precursor.precursor_id, 
                                "filename" : rawdata_file, 
@@ -377,16 +377,17 @@ def score_batch(matrix_queue, lib_cols, BM_model_file, RM_model_file, out_file, 
                                "ms2_area" : ";".join(ms2_area_kept), 
                                "aggr_Fragment_Annotation" : ";".join(frag_kept), 
                                "lib_pearsons" : ";".join(lib_pearsons_kept), 
-                               "aux_scores" : ";".join(aux_scores_kept)}
+                               "drf_scores" : ";".join(drf_scores_kept)}
             out_string_1 = "%(transition_group_id)s\t%(filename)s\t%(RT)s\t"
             out_string_2 = "%(PeptideSequence)s\t%(FullPeptideName)s\t%(Charge)s\t"
             out_string_3 = "%(m/z)s\t%(ProteinName)s\t%(decoy)s\t"
             out_string_4 = "%(assay_rt)s\t%(delta_rt)s\t%(norm_rt)s\t"
             out_string_5 = "%(nr_peaks)s\t%(real_intensities)s\t%(lib_cos_scores)s\t"
-            out_string_6 = "%(dream_scores)s\t%(ms1_area)s\t%(ms2_area)s\t%(aggr_Fragment_Annotation)s\t%(lib_pearsons)s\t%(aux_scores)s\n"
+            out_string_6 = "%(dream_scores)s\t%(ms1_area)s\t%(ms2_area)s\t%(aggr_Fragment_Annotation)s\t%(lib_pearsons)s\t%(drf_scores)s\n"
             out_string = out_string_1 + out_string_2 + out_string_3 + out_string_4 + out_string_5 + out_string_6   
 
-            batch_results.append(out_string % out_string_dict)
+            results.append(out_string % out_string_dict)
 
-        with open(out_file, "a") as v:
-            v.write("".join(batch_results))
+    with open(out_file, "w") as out_f:
+        out_f.write(out_head_1 + out_head_2 + out_head_3 + out_head_4)
+        out_f.write("".join(sorted(results)))

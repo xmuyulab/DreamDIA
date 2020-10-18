@@ -6,8 +6,6 @@ import numpy as np
 import pandas as pd
 import multiprocessing
 
-import warnings
-warnings.filterwarnings('ignore')
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
 from decoy_generator import generate_decoys

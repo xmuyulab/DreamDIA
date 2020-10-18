@@ -190,11 +190,8 @@ def smooth_array(arr):
     if arr.shape[1] <= 1:
         return arr
     new_arr = np.zeros(arr.shape)
-    # the first column
     new_arr[:, 0] = 2 / 3 * arr[:, 0] + 1 / 3 * arr[:, 1]
-    # the last column
     new_arr[:, arr.shape[1] - 1] = 2 / 3 * arr[:, arr.shape[1] - 1] + 1 / 3 * arr[:, arr.shape[1] - 2]
-    # columns in the middle
     for i in range(1, arr.shape[1] - 1):
         new_arr[:, i] = 0.5 * arr[:, i] + 0.25 * (arr[:, i + 1] + arr[:, i - 1])
     
@@ -211,9 +208,9 @@ def calc_XIC(spectra, mz_to_extract, mz_unit, mz_tol):
 
 def filter_matrix(matrix):
     matrix = matrix.astype(float)
-    # filter1
+
     matrix = matrix[np.sum(matrix, axis=1) >= 200] 
-    # filter2
+
     ms2_max_list = np.max(matrix, axis=1)          
     matrix[matrix == 0] = np.inf
     ms2_min_list = np.min(matrix, axis=1)  
@@ -222,7 +219,6 @@ def filter_matrix(matrix):
     return matrix
 
 def adjust_size(frag_matrix, n_frags):
-    # choose topN fragments according to the sum of the intensities
     if frag_matrix.shape[0] > n_frags:
         frag_sum = frag_matrix.sum(axis = 1)
         frag_selected = frag_sum.argsort()[::-1][0 : n_frags]

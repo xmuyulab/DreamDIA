@@ -1,6 +1,4 @@
 import random
-import logging
-import time
 import os
 import os.path
 import numpy as np
@@ -10,14 +8,13 @@ import matplotlib.pyplot as plt
 import matplotlib
 matplotlib.use('Agg')
 import seaborn as sns
-import xgboost as xgb
 from xgboost.sklearn import XGBClassifier
 from sklearn.ensemble import RandomForestClassifier
 
 DELTA_RT_COL = "delta_rt"
 DREAM_SCORE_COL = "dream_scores"
 LIB_COS_SCORE_COL = "lib_cos_scores"
-AUX_SCORES_COL = "aux_scores"
+DRF_SCORES_COL = "drf_scores"
 
 n_base_scores = 4
 heuristic_depth_xgboost = 6
@@ -171,13 +168,13 @@ def feature(dream_score_res, lib_cols, top_k, score0_cutoff, score2_cutoff):
     augmented_data = augmented_data[(augmented_data["label"] == "DECOY") | (target_filter1 & target_filter2 & target_filter3)]
     augmented_data.index = [i for i in range(augmented_data.shape[0])]
 
-    def get_aux_string(x, y):
+    def get_drf_string(x, y):
         return x.strip().split(";")[y - 1]
 
-    augmented_data["aux_string"] = augmented_data.apply(lambda df: get_aux_string(df[AUX_SCORES_COL], df["peak_group_rank"]), axis = 1)
+    augmented_data["drf_string"] = augmented_data.apply(lambda df: get_drf_string(df[DRF_SCORES_COL], df["peak_group_rank"]), axis = 1)
 
     for i in range(10):
-        augmented_data["score%d" % (15 + i)] = augmented_data["aux_string"].apply(lambda x : float(x.strip().split("|")[i]))
+        augmented_data["score%d" % (15 + i)] = augmented_data["drf_string"].apply(lambda x : float(x.strip().split("|")[i]))
     return augmented_data
 
 def prophet(augmented_data, lib_cols, max_depth, disc_model, n_threads, seed):

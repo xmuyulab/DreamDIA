@@ -1,9 +1,6 @@
-import re
 import os.path
 import random
-import logging
 import multiprocessing
-import numpy as np
 import pandas as pd
 
 from utils import load_library, correct_full_sequence, get_precursor_indice, tear_library, flatten_list
@@ -118,9 +115,6 @@ def decoy_generator(library, lib_cols, precursor_indice, original_colnames, resu
 
 def generate_decoys(lib, do_not_output_library, n_threads, seed, mz_min, mz_max, n_frags_each_precursor, logger):
     output_filename = os.path.join(os.path.dirname(lib), os.path.basename(lib)[:-4] + ".DreamDIA.with_decoys.tsv")
-    if os.path.exists(output_filename):
-        lib_cols, library = load_library(output_filename)
-        return lib_cols, library
 
     lib_cols, library = load_library(lib)
     

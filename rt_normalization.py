@@ -2,6 +2,7 @@ import re
 import os
 import os.path
 import numpy as np
+import pandas as pd
 import matplotlib
 matplotlib.use('pdf')
 import matplotlib.pyplot as plt
@@ -12,8 +13,6 @@ from keras.models import load_model
 
 from mz_calculator import calc_fragment_mz, calc_all_fragment_mzs
 from utils import calc_win_id, calc_XIC, filter_matrix, smooth_array, adjust_size
-
-os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
 class IRT_Precursor:
     def __init__(self, precursor_id, full_sequence, charge, precursor_mz, iRT, protein_name):
@@ -75,10 +74,10 @@ def load_irt_precursors(irt_library, lib_cols, mz_min, mz_max, iso_range, n_thre
 
 def extract_irt_xics(ms1, ms2, win_range, extract_queue, precursor_list, 
                      model_cycles, mz_unit, mz_min, mz_max, mz_tol_ms1, mz_tol_ms2, iso_range, 
-                     n_lib_frags, n_self_frags, n_qt3_frags, n_ms1_frags):
+                     n_lib_frags, n_self_frags, n_qt3_frags, n_ms1_frags, p_id):
     feature_dimension = n_lib_frags + n_self_frags + n_qt3_frags + n_ms1_frags
 
-    for precursor in precursor_list:
+    for idx, precursor in enumerate(precursor_list):
         precursor_win_id = calc_win_id(precursor.precursor_mz, win_range)
 
         lib_xics = np.array([calc_XIC(ms2[precursor_win_id].spectra, frag, mz_unit, mz_tol_ms2) for frag in precursor.lib_frags])
@@ -93,6 +92,7 @@ def extract_irt_xics(ms1, ms2, win_range, extract_queue, precursor_list,
         ms1_xics = np.array(ms1_xics)
 
         precursor_matrices, middle_rt_list = [], []
+
         for start_cycle in range(len(ms1.rt_list) - model_cycles + 1):
             end_cycle = start_cycle + model_cycles
             middle_rt_list.append(ms1.rt_list[start_cycle + model_cycles // 2])
@@ -123,14 +123,12 @@ def extract_irt_xics(ms1, ms2, win_range, extract_queue, precursor_list,
             lib_matrix = lib_matrix[np.argsort(-pearson_matrix.sum(axis = 1)), :]
 
             if self_matrix.shape[0] > 1:
-                self_pearson = np.corrcoef(self_matrix, lib_matrix[0, :])
-                self_pearson = self_pearson[0, :][:-1]
-                self_matrix = self_matrix[np.argsort(-self_pearson), :]
+                self_pearson = [pd.Series(self_matrix[k, :]).corr(pd.Series(lib_matrix[0, :])) for k in range(self_matrix.shape[0])]
+                self_matrix = self_matrix[np.argsort(-np.array(self_pearson)), :]
 
             if qt3_matrix.shape[0] > 1:
-                qt3_pearson = np.corrcoef(qt3_matrix, lib_matrix[0, :])
-                qt3_pearson = qt3_pearson[0, :][:-1]
-                qt3_matrix = qt3_matrix[np.argsort(-qt3_pearson), :]
+                qt3_pearson = [pd.Series(qt3_matrix[k, :]).corr(pd.Series(lib_matrix[0, :])) for k in range(qt3_matrix.shape[0])]
+                qt3_matrix = qt3_matrix[np.argsort(-np.array(qt3_pearson)), :]
 
             lib_matrix = adjust_size(lib_matrix, n_lib_frags)
             self_matrix = adjust_size(self_matrix, n_self_frags)
@@ -159,9 +157,9 @@ def extract_irt_xics(ms1, ms2, win_range, extract_queue, precursor_list,
 
     extract_queue.put(None)
 
-def score_irt(extract_queue, BM_model_file, out_file_dir, n_threads, score_cutoff, seed):
+def score_irt(extract_queue, BM_model_file, out_file_dir, n_threads, score_cutoff):
     BM_model = load_model(BM_model_file, compile = False)
-    irt_pairs = []
+    irt_recas, rt_no1 = [], []
     none_count = 0
 
     while True:
@@ -180,31 +178,40 @@ def score_irt(extract_queue, BM_model_file, out_file_dir, n_threads, score_cutof
             scores = BM_model(precursor_matrices, training = False)
             max_index = np.argmax(scores)
             if scores[max_index] >= score_cutoff:
-                irt_pairs.append((iRT, middle_rt_list[max_index]))
+                irt_recas.append(iRT)
+                rt_no1.append(middle_rt_list[max_index])
 
         extract_queue.task_done()
 
+    irt_pairs = [(irt, rt) for (irt, rt) in zip(irt_recas, rt_no1)]
     irt_pairs.sort(key = lambda x : x[0])
 
     if not os.path.exists(out_file_dir):
         os.mkdir(out_file_dir)
+
     with open(os.path.join(out_file_dir, "time_points.txt"), "w") as f:
         f.writelines("%.5f\t%.2f\n" % (irt, rt) for (irt, rt) in irt_pairs)
 
-    irt_recas = [x[0] for x in irt_pairs]
-    rt_no1 = [x[1] for x in irt_pairs]
+def fit_irt_model(out_file_dir, seed):
+    irt_recas, rt_no1 = [], []
+    f = open(os.path.join(out_file_dir, "time_points.txt"))
+    for line in f:
+        irt, rt = line.strip().split("\t")
+        irt_recas.append(float(irt))
+        rt_no1.append(float(rt))
+    f.close()
+
     lr_RAN = RANSACRegressor(LinearRegression(), random_state = seed)
     lr_RAN.fit(np.array(irt_recas).reshape(-1, 1), rt_no1)
     new_lr = LinearRegression()
     new_lr.fit(np.array(irt_recas).reshape(-1, 1)[lr_RAN.inlier_mask_], np.array(rt_no1)[lr_RAN.inlier_mask_])
     r2 = new_lr.score(np.array(irt_recas).reshape(-1, 1)[lr_RAN.inlier_mask_], np.array(rt_no1)[lr_RAN.inlier_mask_])
-
     slope, intercept = new_lr.coef_[0], new_lr.intercept_
-    f = open(os.path.join(out_file_dir, "irt_model.txt"), "w")
-    f.write("%s\n" % slope)
-    f.write("%s\n" % intercept)
-    f.write("%s\n" % r2)
-    f.close()
+
+    with open(os.path.join(out_file_dir, "irt_model.txt"), "w") as f:
+        f.write("%s\n" % slope)
+        f.write("%s\n" % intercept)
+        f.write("%s\n" % r2)
 
     line_X = np.arange(min(irt_recas) - 2, max(irt_recas) + 2)
     line_y = new_lr.predict(line_X[:, np.newaxis])
@@ -215,3 +222,5 @@ def score_irt(extract_queue, BM_model_file, out_file_dir, n_threads, score_cutof
     plt.ylabel("RT by Dream-DIA")
     plt.title("Dream-DIA RT normalization, $R^2 = $%.5f" % r2)
     plt.savefig(os.path.join(out_file_dir, "irt_model.pdf"))
+
+    return slope, intercept

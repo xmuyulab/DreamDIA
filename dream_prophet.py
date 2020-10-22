@@ -247,8 +247,7 @@ def dream_indicators_xgboost(augmented_data, lib_cols, n_threads, seed, output_p
     indi_data = indi_data.sort_values(by = [lib_cols["PRECURSOR_ID_COL"], "dr_score"], ascending = [True, False])
     indi_data_grouped = indi_data.drop_duplicates(subset = lib_cols["PRECURSOR_ID_COL"], keep = "first")
 
-    fdrs, final_cut = calc_score_cut(indi_data_grouped, score_column = "dr_score", label_column = "indicate_label", cut_off = fdr_precursor, 
-                                     logger = logger, plot = True, plot_name = os.path.join(output_path, "default_score_distribution.pdf"))
+    fdrs, final_cut = calc_score_cut(indi_data_grouped, score_column = "dr_score", label_column = "indicate_label", cut_off = fdr_precursor, logger = logger, plot = True, plot_name = os.path.join(output_path, "default_score_distribution.pdf"))
     default_res = indi_data_grouped[indi_data_grouped["dr_score"] >= final_cut].label.value_counts()
     n_default_target = default_res["TARGET"]
     n_default_decoy = default_res["DECOY"]
@@ -270,7 +269,7 @@ def dream_indicators_xgboost(augmented_data, lib_cols, n_threads, seed, output_p
         n_target_col.append(data_part["indicate_label"].value_counts()["TARGET"])
         target_part = data_part[data_part["indicate_label"] == "TARGET"]
         n_indi_target_col.append(target_part[target_part["label"] == "DECOY"].shape[0])
-        logger.info("(%d / %d) depth: %d test finished..." % (i + 1, len(search_range), test_max_depth))
+        #logger.info("(%d / %d) depth: %d test finished..." % (i + 1, len(search_range), test_max_depth))
     
     gs_results = pd.DataFrame({"MAX_DEPTH" : search_range, 
                                "N_TARGETS" : n_target_col, 
@@ -322,8 +321,7 @@ def dream_indicators_rf(augmented_data, lib_cols, n_threads, seed, output_path, 
     indi_data = indi_data.sort_values(by = [lib_cols["PRECURSOR_ID_COL"], "dr_score"], ascending = [True, False])
     indi_data_grouped = indi_data.drop_duplicates(subset = lib_cols["PRECURSOR_ID_COL"], keep = "first")
 
-    fdrs, final_cut = calc_score_cut(indi_data_grouped, score_column = "dr_score", label_column = "indicate_label", cut_off = fdr_precursor, 
-                                     logger = logger, plot = True, plot_name = os.path.join(output_path, "default_score_distribution.pdf"))
+    fdrs, final_cut = calc_score_cut(indi_data_grouped, score_column = "dr_score", label_column = "indicate_label", cut_off = fdr_precursor, logger = logger, plot = True, plot_name = os.path.join(output_path, "default_score_distribution.pdf"))
     default_res = indi_data_grouped[indi_data_grouped["dr_score"] >= final_cut].label.value_counts()
     n_default_target = default_res["TARGET"]
     n_default_decoy = default_res["DECOY"]
@@ -345,7 +343,7 @@ def dream_indicators_rf(augmented_data, lib_cols, n_threads, seed, output_path, 
         n_target_col.append(data_part["indicate_label"].value_counts()["TARGET"])
         target_part = data_part[data_part["indicate_label"] == "TARGET"]
         n_indi_target_col.append(target_part[target_part["label"] == "DECOY"].shape[0])
-        logger.info("(%d / %d) depth: %d test finished..." % (i + 1, len(search_range), test_max_depth))
+        #logger.info("(%d / %d) depth: %d test finished..." % (i + 1, len(search_range), test_max_depth))
     
     gs_results = pd.DataFrame({"MAX_DEPTH" : search_range, 
                                "N_TARGETS" : n_target_col, 
@@ -380,12 +378,12 @@ def dream_prophet(dream_score_res, lib_cols, disc_model, top_k, n_threads, seed,
             optimal_depth = heuristic_depth_rf
     
     augmented_data, augmented_data_grouped = prophet(augmented_data, lib_cols, optimal_depth, disc_model, n_threads, seed)
-    augmented_data_grouped["Intensity"] = augmented_data_grouped.apply(lambda df: quant(df["peak_group_rank"], 
-                                                                                        df["ms2_areas"], 
-                                                                                        df["lib_pearsons"]), axis = 1)
+    augmented_data_grouped = augmented_data_grouped.copy()
+    augmented_data_grouped.loc[:, "Intensity"] = list(augmented_data_grouped.apply(lambda df: quant(df["peak_group_rank"], 
+                                                                                              df["ms2_areas"], 
+                                                                                              df["lib_pearsons"]), axis = 1))
     augmented_data_grouped.to_csv(os.path.join(disc_dir, "Dream-DIA_all_results.tsv"), sep = "\t", index = False)
-    fdrs, final_cut = calc_score_cut(augmented_data_grouped, score_column = "dr_score", label_column = "label", cut_off = fdr_precursor, 
-                                     logger = logger, plot = True, plot_name = os.path.join(disc_dir, "optimal_score_distribution.pdf"))
+    fdrs, final_cut = calc_score_cut(augmented_data_grouped, score_column = "dr_score", label_column = "label", cut_off = fdr_precursor, logger = logger, plot = True, plot_name = os.path.join(disc_dir, "optimal_score_distribution.pdf"))
     fdr_data = augmented_data_grouped[augmented_data_grouped["dr_score"] > final_cut]
     fdr_data.to_csv(os.path.join(disc_dir, "Dream-DIA_fdr_results.tsv"), sep = "\t", index = False)
 

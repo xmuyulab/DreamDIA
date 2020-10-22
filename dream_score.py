@@ -6,10 +6,8 @@ import numpy as np
 import pandas as pd
 import multiprocessing
 
-os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
-
 from decoy_generator import generate_decoys
-from rt_normalization import load_irt_precursors, extract_irt_xics, score_irt
+from rt_normalization import load_irt_precursors, extract_irt_xics, score_irt, fit_irt_model
 from score_peak_groups import load_precursors, extract_precursors, score_batch
 from dream_prophet import combine_res, dream_prophet
 from utils import load_rawdata, endoIRT_generator, tear_library
@@ -107,27 +105,24 @@ def dream_score(file_dir, lib, win, out, n_threads, seed, mz_unit, mz_min, mz_ma
 
         extract_queue = multiprocessing.JoinableQueue(n_threads)
         extractors = []
-        for coord in irt_chunk_indice:
+        for p_id, coord in enumerate(irt_chunk_indice):
             p = multiprocessing.Process(target = extract_irt_xics, 
                                         args = (ms1, ms2, win_range, extract_queue, [irt_precursors[i] for i in coord], 
                                                 model_cycles, mz_unit, mz_min, mz_max, mz_tol_ms1, mz_tol_ms2, iso_range, 
-                                                n_lib_frags, n_self_frags, n_qt3_frags, n_ms1_frags, ))                        
+                                                n_lib_frags, n_self_frags, n_qt3_frags, n_ms1_frags, p_id, ))                        
             p.daemon = True
             extractors.append(p)
             p.start()
 
         scorer = multiprocessing.Process(target = score_irt, args = (extract_queue, BM_model_file, rt_norm_dir, 
-                                                                     n_threads, score_cutoff, seed, ))
+                                                                     n_threads, score_cutoff, ))
         scorer.start()
 
         for p in extractors:
             p.join()
         scorer.join()
 
-        irt_model_file = os.path.join(rt_norm_dir, "irt_model.txt")
-        file_handle = open(irt_model_file, "r")
-        irt_model = [float(v) for v in file_handle.read().splitlines()]
-        slope, intercept = irt_model[0], irt_model[1]
+        slope, intercept = fit_irt_model(rt_norm_dir, seed)
 
         logger.info("Score peak groups...")
 

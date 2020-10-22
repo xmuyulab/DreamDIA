@@ -7,8 +7,6 @@ from keras.models import load_model
 from utils import *
 from mz_calculator import calc_all_fragment_mzs
 
-os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
-
 class Lib_frag:
     def __init__(self, mz, charge, fragtype, series, intensity):
         self.__mz = mz

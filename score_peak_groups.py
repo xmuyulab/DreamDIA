@@ -1,5 +1,6 @@
 import os
 import numpy as np
+import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 import tensorflow as tf
 from keras.models import load_model
@@ -170,14 +171,20 @@ def extract_precursors(ms1, ms2, win_range, precursor_list, matrix_queue,
             qt3_xics = qt3_xics[qt3_xics_std != 0, ]
 
             if self_xics.shape[0] > 1 and len(std_indice) >= 1:
-                self_pearson = np.corrcoef(self_xics, lib_xics[0, :])
-                self_pearson = self_pearson[0, :][:-1]
-                self_xics = self_xics[np.argsort(-self_pearson), :]
+                #self_pearson = np.corrcoef(self_xics, lib_xics[0, :])
+                #self_pearson = self_pearson[0, :][:-1]
+                #self_xics = self_xics[np.argsort(-self_pearson), :]
+
+                self_pearson = [pd.Series(self_xics[k, :]).corr(pd.Series(lib_xics[0, :])) for k in range(self_xics.shape[0])]
+                self_xics = self_xics[np.argsort(-np.array(self_pearson)), :]
 
             if qt3_xics.shape[0] > 1 and len(std_indice) >= 1:
-                qt3_pearson = np.corrcoef(qt3_xics, lib_xics[0, :])
-                qt3_pearson = qt3_pearson[0, :][:-1]
-                qt3_xics = qt3_xics[np.argsort(-qt3_pearson), :]
+                #qt3_pearson = np.corrcoef(qt3_xics, lib_xics[0, :])
+                #qt3_pearson = qt3_pearson[0, :][:-1]
+                #qt3_xics = qt3_xics[np.argsort(-qt3_pearson), :]
+
+                qt3_pearson = [pd.Series(qt3_xics[k, :]).corr(pd.Series(lib_xics[0, :])) for k in range(qt3_xics.shape[0])]
+                qt3_xics = qt3_xics[np.argsort(-np.array(qt3_pearson)), :]
 
             lib_matrix = adjust_size(lib_xics, n_lib_frags)
             self_matrix = adjust_size(self_xics, n_self_frags)

@@ -196,6 +196,6 @@ def generate_decoys(lib, do_not_output_library, n_threads, seed, mz_min, mz_max,
     library_with_decoys = library_with_decoys.sort_values(by = [lib_cols["PRECURSOR_ID_COL"], lib_cols["LIB_INTENSITY_COL"]], ascending = [True, False])
     library_with_decoys.index = [i for i in range(library_with_decoys.shape[0])]
 
-    if not do_not_output_library:
+    if (not do_not_output_library) and (not os.path.exists(output_filename)):
         library_with_decoys.to_csv(output_filename, index = False, sep = "\t")
     return lib_cols, library_with_decoys

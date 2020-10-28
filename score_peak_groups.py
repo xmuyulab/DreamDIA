@@ -175,7 +175,7 @@ def extract_precursors(ms1, ms2, win_range, precursor_list, matrix_queue,
             if self_xics.shape[0] > 1 and len(std_indice) >= 1:
                 #self_pearson = np.corrcoef(self_xics, lib_xics[0, :])[:-1, -1]
                 #self_pearson = np.array([pearsonr(self_xics[i, :], lib_xics[0, :])[0] for i in range(self_xics.shape[0])])
-                self_pearson = np.array([calc_pearson(self_xics[i, :], lib_xics[0, :]) for i in range(self_xics.shape[0])])
+                self_pearson = np.array([tools.calc_pearson(self_xics[i, :], lib_xics[0, :]) for i in range(self_xics.shape[0])])
                 self_xics = self_xics[np.argsort(-self_pearson), :]
 
                 #self_pearson = [pd.Series(self_xics[k, :]).corr(pd.Series(lib_xics[0, :])) for k in range(self_xics.shape[0])]
@@ -184,7 +184,7 @@ def extract_precursors(ms1, ms2, win_range, precursor_list, matrix_queue,
             if qt3_xics.shape[0] > 1 and len(std_indice) >= 1:
                 #qt3_pearson = np.corrcoef(qt3_xics, lib_xics[0, :])[:-1, -1]
                 #qt3_pearson = np.array([pearsonr(qt3_xics[i, :], lib_xics[0, :])[0] for i in range(qt3_xics.shape[0])])
-                qt3_pearson = np.array([calc_pearson(qt3_xics[i, :], lib_xics[0, :]) for i in range(qt3_xics.shape[0])])
+                qt3_pearson = np.array([tools.calc_pearson(qt3_xics[i, :], lib_xics[0, :]) for i in range(qt3_xics.shape[0])])
                 qt3_xics = qt3_xics[np.argsort(-qt3_pearson), :]
 
                 #qt3_pearson = [pd.Series(qt3_xics[k, :]).corr(pd.Series(lib_xics[0, :])) for k in range(qt3_xics.shape[0])]

@@ -127,7 +127,7 @@ def extract_irt_xics(ms1, ms2, win_range, extract_queue, precursor_list,
             if self_matrix.shape[0] > 1:
                 #self_pearson = np.corrcoef(self_matrix, lib_matrix[0, :])[:-1, -1]
                 #self_pearson = np.array([pearsonr(self_matrix[i, :], lib_matrix[0, :])[0] for i in range(self_matrix.shape[0])])
-                self_pearson = np.array([calc_pearson(self_matrix[i, :], lib_matrix[0, :]) for i in range(self_matrix.shape[0])])
+                self_pearson = np.array([tools.calc_pearson(self_matrix[i, :], lib_matrix[0, :]) for i in range(self_matrix.shape[0])])
                 self_matrix = self_matrix[np.argsort(-self_pearson), :]
 
                 #self_pearson = [pd.Series(self_matrix[k, :]).corr(pd.Series(lib_matrix[0, :])) for k in range(self_matrix.shape[0])]
@@ -136,7 +136,7 @@ def extract_irt_xics(ms1, ms2, win_range, extract_queue, precursor_list,
             if qt3_matrix.shape[0] > 1:
                 #qt3_pearson = np.corrcoef(qt3_matrix, lib_matrix[0, :])[:-1, -1]
                 #qt3_pearson = np.array([pearsonr(qt3_matrix[i, :], lib_matrix[0, :])[0] for i in range(qt3_matrix.shape[0])])
-                qt3_pearson = np.array([calc_pearson(qt3_matrix[i, :], lib_matrix[0, :]) for i in range(qt3_matrix.shape[0])])
+                qt3_pearson = np.array([tools.calc_pearson(qt3_matrix[i, :], lib_matrix[0, :]) for i in range(qt3_matrix.shape[0])])
                 qt3_matrix = qt3_matrix[np.argsort(-qt3_pearson), :]
 
                 #qt3_pearson = [pd.Series(qt3_matrix[k, :]).corr(pd.Series(lib_matrix[0, :])) for k in range(qt3_matrix.shape[0])]

@@ -106,8 +106,6 @@ def extract_irt_xics(ms1, ms2, win_range, extract_queue, precursor_list,
 
             lib_matrix_std = lib_matrix.std(axis = 1)
             lib_matrix = lib_matrix[lib_matrix_std != 0, ]
-            if lib_matrix.shape[0] < 2:
-                continue
             #self_matrix_std = self_matrix.std(axis = 1)
             #self_matrix = self_matrix[self_matrix_std != 0, ]
             #qt3_matrix_std = qt3_matrix.std(axis = 1)
@@ -121,10 +119,11 @@ def extract_irt_xics(ms1, ms2, win_range, extract_queue, precursor_list,
             qt3_matrix = tools.smooth_array(qt3_matrix.astype(float))
             ms1_matrix = tools.smooth_array(ms1_matrix.astype(float))
 
-            pearson_matrix = np.corrcoef(lib_matrix)
-            lib_matrix = lib_matrix[np.argsort(-pearson_matrix.sum(axis = 1)), :]
+            if lib_matrix.shape[0] > 1:
+                pearson_matrix = np.corrcoef(lib_matrix)
+                lib_matrix = lib_matrix[np.argsort(-pearson_matrix.sum(axis = 1)), :]
 
-            if self_matrix.shape[0] > 1:
+            if self_matrix.shape[0] > 1 and lib_matrix.shape[0] > 0:
                 #self_pearson = np.corrcoef(self_matrix, lib_matrix[0, :])[:-1, -1]
                 #self_pearson = np.array([pearsonr(self_matrix[i, :], lib_matrix[0, :])[0] for i in range(self_matrix.shape[0])])
                 self_pearson = np.array([tools.calc_pearson(self_matrix[i, :], lib_matrix[0, :]) for i in range(self_matrix.shape[0])])
@@ -133,7 +132,7 @@ def extract_irt_xics(ms1, ms2, win_range, extract_queue, precursor_list,
                 #self_pearson = [pd.Series(self_matrix[k, :]).corr(pd.Series(lib_matrix[0, :])) for k in range(self_matrix.shape[0])]
                 #self_matrix = self_matrix[np.argsort(-np.array(self_pearson)), :]
 
-            if qt3_matrix.shape[0] > 1:
+            if qt3_matrix.shape[0] > 1 and lib_matrix.shape[0] > 0:
                 #qt3_pearson = np.corrcoef(qt3_matrix, lib_matrix[0, :])[:-1, -1]
                 #qt3_pearson = np.array([pearsonr(qt3_matrix[i, :], lib_matrix[0, :])[0] for i in range(qt3_matrix.shape[0])])
                 qt3_pearson = np.array([tools.calc_pearson(qt3_matrix[i, :], lib_matrix[0, :]) for i in range(qt3_matrix.shape[0])])

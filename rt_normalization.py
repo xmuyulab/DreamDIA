@@ -10,9 +10,11 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.linear_model import LinearRegression
 from sklearn.linear_model import RANSACRegressor
 from keras.models import load_model
+from scipy.stats import pearsonr
+import tools_cython as tools
 
 from mz_calculator import calc_fragment_mz, calc_all_fragment_mzs
-from utils import calc_win_id, calc_XIC, filter_matrix, smooth_array, adjust_size
+from utils import calc_win_id, calc_XIC, filter_matrix, adjust_size, calc_pearson
 
 class IRT_Precursor:
     def __init__(self, precursor_id, full_sequence, charge, precursor_mz, iRT, protein_name):
@@ -106,31 +108,35 @@ def extract_irt_xics(ms1, ms2, win_range, extract_queue, precursor_list,
             lib_matrix = lib_matrix[lib_matrix_std != 0, ]
             if lib_matrix.shape[0] < 2:
                 continue
-            self_matrix_std = self_matrix.std(axis = 1)
-            self_matrix = self_matrix[self_matrix_std != 0, ]
-            qt3_matrix_std = qt3_matrix.std(axis = 1)
-            qt3_matrix = qt3_matrix[qt3_matrix_std != 0, ]
+            #self_matrix_std = self_matrix.std(axis = 1)
+            #self_matrix = self_matrix[self_matrix_std != 0, ]
+            #qt3_matrix_std = qt3_matrix.std(axis = 1)
+            #qt3_matrix = qt3_matrix[qt3_matrix_std != 0, ]
 
             self_matrix = filter_matrix(self_matrix)
             qt3_matrix = filter_matrix(qt3_matrix)
 
-            lib_matrix = smooth_array(lib_matrix)
-            self_matrix = smooth_array(self_matrix)
-            qt3_matrix = smooth_array(qt3_matrix)
-            ms1_matrix = smooth_array(ms1_matrix)
+            lib_matrix = tools.smooth_array(lib_matrix.astype(float))
+            self_matrix = tools.smooth_array(self_matrix.astype(float))
+            qt3_matrix = tools.smooth_array(qt3_matrix.astype(float))
+            ms1_matrix = tools.smooth_array(ms1_matrix.astype(float))
 
             pearson_matrix = np.corrcoef(lib_matrix)
             lib_matrix = lib_matrix[np.argsort(-pearson_matrix.sum(axis = 1)), :]
 
             if self_matrix.shape[0] > 1:
-                self_pearson = np.corrcoef(self_matrix, lib_matrix[0, :])[:-1, -1]
+                #self_pearson = np.corrcoef(self_matrix, lib_matrix[0, :])[:-1, -1]
+                #self_pearson = np.array([pearsonr(self_matrix[i, :], lib_matrix[0, :])[0] for i in range(self_matrix.shape[0])])
+                self_pearson = np.array([calc_pearson(self_matrix[i, :], lib_matrix[0, :]) for i in range(self_matrix.shape[0])])
                 self_matrix = self_matrix[np.argsort(-self_pearson), :]
 
                 #self_pearson = [pd.Series(self_matrix[k, :]).corr(pd.Series(lib_matrix[0, :])) for k in range(self_matrix.shape[0])]
                 #self_matrix = self_matrix[np.argsort(-np.array(self_pearson)), :]
 
             if qt3_matrix.shape[0] > 1:
-                qt3_pearson = np.corrcoef(qt3_matrix, lib_matrix[0, :])[:-1, -1]
+                #qt3_pearson = np.corrcoef(qt3_matrix, lib_matrix[0, :])[:-1, -1]
+                #qt3_pearson = np.array([pearsonr(qt3_matrix[i, :], lib_matrix[0, :])[0] for i in range(qt3_matrix.shape[0])])
+                qt3_pearson = np.array([calc_pearson(qt3_matrix[i, :], lib_matrix[0, :]) for i in range(qt3_matrix.shape[0])])
                 qt3_matrix = qt3_matrix[np.argsort(-qt3_pearson), :]
 
                 #qt3_pearson = [pd.Series(qt3_matrix[k, :]).corr(pd.Series(lib_matrix[0, :])) for k in range(qt3_matrix.shape[0])]

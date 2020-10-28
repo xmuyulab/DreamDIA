@@ -12,7 +12,12 @@ def print_version(ctx, param, value):
     click.echo('Dream-DIA Version 1.0.0')
     ctx.exit()
 
-@click.command(context_settings = CONTEXT_SETTINGS)
+@click.group(context_settings = CONTEXT_SETTINGS)
+@click.option('--version', is_flag = True, callback = print_version, expose_value = False, is_eager = True, help = "Print version and exit.")
+def dreamdia():
+    pass
+
+@dreamdia.command(context_settings = CONTEXT_SETTINGS)
 @click.option("--file_dir", required = True, type = click.Path(exists = True), help = "Directory that contains only DIA data files. Centroided .mzXML, .mzML or .raw files from Thermo Fisher equipments are supported. (For Linux systems, `mono` tool has to be installed for the supporting of .raw files. https://www.mono-project.com/download/stable/#download-lin)")
 @click.option("--lib", required = True, type = click.Path(exists = True), help = "File name of the spectral library. .tsv or .csv formats are supported.")
 @click.option("--win", required = True, type = click.Path(exists = True), help = "Window settings of the acquisition with no overlaps. Each row has two numbers that describe the start and the end of a window, which are separated by a tab.")
@@ -40,10 +45,9 @@ def print_version(ctx, param, value):
 @click.option("--prophet_mode", default = "local", show_default = True, type = click.Choice(["local", "global"]), help = "Train a disciminant model on the peak groups of each sample respectively (local) or train a discriminant model on all the peak groups from all the samples.")
 @click.option("--disc_model", default = "xgboost", show_default = True, type = click.Choice(["xgboost", "rf"]), help = "Type of the discriminant model.")
 @click.option("--dream_indicators", is_flag = True, help = "Activate Dream-Indicators to search better hyper-parameters for the discriminant model. If this option is not activated, the depths of the trees in the discriminant model will be heuristically set to 10.")
-@click.option('--version', is_flag = True, callback = print_version, expose_value = False, is_eager = True, help = "Print version and exit.")
 def dreamScore(file_dir, lib, win, out, n_threads, seed, mz_unit, mz_min, mz_max, mz_tol_ms1, mz_tol_ms2, fdr_precursor, fdr_protein, n_irt, top_k, n_cycles, n_frags_each_precursor, do_not_output_library, swath, model_cycles, n_lib_frags, n_self_frags, n_qt3_frags, n_ms1_frags, prophet_mode, disc_model, dream_indicators):
     
     dream_score(file_dir, lib, win, out, n_threads, seed, mz_unit, mz_min, mz_max, mz_tol_ms1, mz_tol_ms2, fdr_precursor, fdr_protein, n_irt, top_k, n_cycles, n_frags_each_precursor, do_not_output_library, swath, model_cycles, n_lib_frags, n_self_frags, n_qt3_frags, n_ms1_frags, prophet_mode, disc_model, dream_indicators)
 
 if __name__ == "__main__":
-    dreamScore()
+    dreamdia()

@@ -4,6 +4,8 @@ import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 import tensorflow as tf
 from keras.models import load_model
+from scipy.stats import pearsonr
+import tools_cython as tools
 
 from utils import *
 from mz_calculator import calc_all_fragment_mzs
@@ -135,15 +137,15 @@ def extract_precursors(ms1, ms2, win_range, precursor_list, matrix_queue,
             self_xics = filter_matrix(self_xics)
             qt3_xics = filter_matrix(qt3_xics)
 
-            lib_xics = smooth_array(lib_xics)
-            self_xics = smooth_array(self_xics)
-            qt3_xics = smooth_array(qt3_xics)
-            ms1_xics = smooth_array(ms1_xics)
+            lib_xics = tools.smooth_array(lib_xics.astype(float))
+            self_xics = tools.smooth_array(self_xics.astype(float))
+            qt3_xics = tools.smooth_array(qt3_xics.astype(float))
+            ms1_xics = tools.smooth_array(ms1_xics.astype(float))
 
             # calculate areas
             precursor_rt_list_part_diff = np.array(precursor_rt_list_part[1:]) - np.array(precursor_rt_list_part[:-1])
-            ms2_areas = [calc_area(lib_xics[i, :], precursor_rt_list_part_diff) for i in range(lib_xics.shape[0])]
-            ms1_area = calc_area(ms1_xics[0, :], precursor_rt_list_part_diff)
+            ms2_areas = [tools.calc_area(lib_xics[i, :], precursor_rt_list_part_diff) for i in range(lib_xics.shape[0])]
+            ms1_area = tools.calc_area(ms1_xics[0, :], precursor_rt_list_part_diff)
             precursor.ms2_areas.append("|".join([str(each) for each in ms2_areas]))
             precursor.ms1_areas.append(str(ms1_area))
 
@@ -165,20 +167,24 @@ def extract_precursors(ms1, ms2, win_range, precursor_list, matrix_queue,
             lib_pearsons.append(pearson_sums)
             lib_xics = lib_xics[np.argsort(-np.array(pearson_sums)), :]
 
-            self_xics_std = self_xics.std(axis = 1)
-            self_xics = self_xics[self_xics_std != 0, ]
-            qt3_xics_std = qt3_xics.std(axis = 1)
-            qt3_xics = qt3_xics[qt3_xics_std != 0, ]
+            #self_xics_std = self_xics.std(axis = 1)
+            #self_xics = self_xics[self_xics_std != 0, ]
+            #qt3_xics_std = qt3_xics.std(axis = 1)
+            #qt3_xics = qt3_xics[qt3_xics_std != 0, ]
 
             if self_xics.shape[0] > 1 and len(std_indice) >= 1:
-                self_pearson = np.corrcoef(self_xics, lib_xics[0, :])[:-1, -1]
+                #self_pearson = np.corrcoef(self_xics, lib_xics[0, :])[:-1, -1]
+                #self_pearson = np.array([pearsonr(self_xics[i, :], lib_xics[0, :])[0] for i in range(self_xics.shape[0])])
+                self_pearson = np.array([calc_pearson(self_xics[i, :], lib_xics[0, :]) for i in range(self_xics.shape[0])])
                 self_xics = self_xics[np.argsort(-self_pearson), :]
 
                 #self_pearson = [pd.Series(self_xics[k, :]).corr(pd.Series(lib_xics[0, :])) for k in range(self_xics.shape[0])]
                 #self_xics = self_xics[np.argsort(-np.array(self_pearson)), :]
 
             if qt3_xics.shape[0] > 1 and len(std_indice) >= 1:
-                qt3_pearson = np.corrcoef(qt3_xics, lib_xics[0, :])[:-1, -1]
+                #qt3_pearson = np.corrcoef(qt3_xics, lib_xics[0, :])[:-1, -1]
+                #qt3_pearson = np.array([pearsonr(qt3_xics[i, :], lib_xics[0, :])[0] for i in range(qt3_xics.shape[0])])
+                qt3_pearson = np.array([calc_pearson(qt3_xics[i, :], lib_xics[0, :]) for i in range(qt3_xics.shape[0])])
                 qt3_xics = qt3_xics[np.argsort(-qt3_pearson), :]
 
                 #qt3_pearson = [pd.Series(qt3_xics[k, :]).corr(pd.Series(lib_xics[0, :])) for k in range(qt3_xics.shape[0])]

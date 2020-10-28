@@ -186,17 +186,6 @@ def load_rawdata(rawdata_file, win_file, mz_min, mz_max):
 
     return ms1, ms2, win_range
 
-def smooth_array(arr):
-    if arr.shape[1] <= 1:
-        return arr
-    new_arr = np.zeros(arr.shape)
-    new_arr[:, 0] = 2 / 3 * arr[:, 0] + 1 / 3 * arr[:, 1]
-    new_arr[:, arr.shape[1] - 1] = 2 / 3 * arr[:, arr.shape[1] - 1] + 1 / 3 * arr[:, arr.shape[1] - 2]
-    for i in range(1, arr.shape[1] - 1):
-        new_arr[:, i] = 0.5 * arr[:, i] + 0.25 * (arr[:, i + 1] + arr[:, i - 1])
-    
-    return new_arr
-
 def calc_XIC(spectra, mz_to_extract, mz_unit, mz_tol):
     if mz_unit == "Da":
         extract_width = [mz_to_extract - mz_tol / 2, mz_to_extract + mz_tol / 2]
@@ -243,12 +232,6 @@ def find_rt_pos(RT, rt_list, n_cycles):
         rt_pos = [i for i in range(start_pos, end_pos)]
     return rt_pos
 
-def calc_area(frag_chrom, rt_list_diff):
-    trapezoids = 0
-    for i in range(len(rt_list_diff)):
-        trapezoids += (frag_chrom[i] + frag_chrom[i + 1]) * rt_list_diff[i]
-    return trapezoids / 2
-
 def get_peak_indice(n_cycles, peak_index_range):
     peak_indice = [n_cycles // 2]
     for i in range(peak_index_range - 1):
@@ -263,3 +246,12 @@ def get_peak_indice(n_cycles, peak_index_range):
 
 def cos_sim(array_1, array_2):
     return cosine_similarity(np.array(array_1).reshape(1, -1), np.array(array_2).reshape(1, -1))[0][0]
+
+def calc_pearson(x, y):    
+    abs_x = x - x.mean()
+    abs_y = y - y.mean()
+    square_x_sum = sum(abs_x ** 2)
+    square_y_sum = sum(abs_y ** 2)
+    if square_x_sum == 0 or square_y_sum == 0:
+        return 0
+    return sum(abs_x * abs_y) / (np.sqrt(square_x_sum) * np.sqrt(square_y_sum) / len(x)) / len(x)

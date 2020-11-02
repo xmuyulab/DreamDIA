@@ -233,5 +233,6 @@ def fit_irt_model(out_file_dir, seed):
     plt.ylabel("RT by Dream-DIA")
     plt.title("Dream-DIA RT normalization, $R^2 = $%.5f" % r2)
     plt.savefig(os.path.join(out_file_dir, "irt_model.pdf"))
+    plt.close()
 
     return slope, intercept

@@ -1,8 +1,35 @@
 ![logo](./figures/Dream-DIA.jpg)
 
-Software for data-independent acquisition (DIA) proteomic data with deep representation features.
+Software for data-independent acquisition (DIA) data analysis with deep representation features.
 
-## Requirements
+## Docker image & quick example
+
+**We recommend to use docker containers to avoid complicated installation and compilation.** 
+
+1. Pull the docker image from DockerHub.
+
+```shell
+docker pull mingxuangao/dreamdia:v1.0.0
+```
+
+2. Enter a container for testing.
+
+```shell
+docker run -it --name dreamdia_example --gpus all -v /YOUR/OWN/WORK/PATH:/tmp/work mingxuangao/dreamdia:v1.0.0 /bin/bash
+```
+
+3. Run the example.
+
+```shell
+cd /tmp/dreamdia_example
+python ../Dream-DIA/DreamDIA.py dreamscore --file_dir raw_data --lib lib.tsv --win win.tsv --out example_results
+```
+
+The testing results will be in `example_results`.
+
+## Build from source
+
+### Requirements
 
 ```
 python >= 3.6.0
@@ -17,7 +44,7 @@ keras-gpu
 xgboost
 ```
 
-## Installation
+### Installation
 
 ```bash
 git clone https://github.com/xmuyulab/Dream-DIA

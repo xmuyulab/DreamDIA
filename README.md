@@ -18,6 +18,8 @@ docker pull mingxuangao/dreamdia:v1.0.0
 docker run -it --name dreamdia_example --gpus all -v /YOUR/OWN/WORK/PATH:/tmp/work mingxuangao/dreamdia:v1.0.0 /bin/bash
 ```
 
+* Using the argument `--gpus all` will considerably accelerate the Dream-DIA pipeline if you have some GPUs.
+
 3. Activate the conda environment.
 
 ```shell
@@ -76,9 +78,9 @@ python Dream-DIA/DreamDIA.py dreamscore --file_dir rawdata_dir --lib library.tsv
 
 * Centroided .mzML or .mzXML files are supported at any time. 
 
-* If .raw files are going to be fed directly to Dream-DIA in Linux systems, [mono](https://www.mono-project.com/download/stable/#download-lin) must be installed.
+* If .raw files are going to be fed directly to Dream-DIA in Linux systems, [mono](https://www.mono-project.com/download/stable/#download-lin) must be installed for the data format conversion by ThermoRawFileParser.
 
-All raw data files are suggested being put at the same directory as below. 
+All raw data files should be at the same directory as below. 
 
 ```
 # rawdata_dir/

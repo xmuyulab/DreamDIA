@@ -18,7 +18,13 @@ docker pull mingxuangao/dreamdia:v1.0.0
 docker run -it --name dreamdia_example --gpus all -v /YOUR/OWN/WORK/PATH:/tmp/work mingxuangao/dreamdia:v1.0.0 /bin/bash
 ```
 
-3. Run the example.
+3. Activate the conda environment.
+
+```shell
+source activate keras
+```
+
+4. Run the example.
 
 ```shell
 cd /tmp/dreamdia_example
@@ -44,6 +50,8 @@ keras-gpu
 xgboost
 ```
 
+If .raw files are going to be fed directly to Dream-DIA in Linux systems, [mono](https://www.mono-project.com/download/stable/#download-lin) must be installed.
+
 ### Installation
 
 ```bash
@@ -66,9 +74,9 @@ python Dream-DIA/DreamDIA.py dreamscore --file_dir rawdata_dir --lib library.tsv
 
 #### 1. DIA raw data files
 
-Centroided .mzML or .mzXML files and .raw files from Thermo Fisher equipments are supported. 
+* Centroided .mzML or .mzXML files are supported at any time. 
 
-**Attention!!!** If .raw files are going to be processed on Linux systems, [mono](https://www.mono-project.com/download/stable/#download-lin) must be installed.
+* If .raw files are going to be fed directly to Dream-DIA in Linux systems, [mono](https://www.mono-project.com/download/stable/#download-lin) must be installed.
 
 All raw data files are suggested being put at the same directory as below. 
 

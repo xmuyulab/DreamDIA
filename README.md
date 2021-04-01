@@ -78,7 +78,14 @@ python Dream-DIA/DreamDIA.py dreamscore --file_dir rawdata_dir --lib library.tsv
 
 * Centroided .mzML or .mzXML files are supported at any time. 
 
-* If .raw files are going to be fed directly to Dream-DIA in Linux systems, [mono](https://www.mono-project.com/download/stable/#download-lin) must be installed for the data format conversion by ThermoRawFileParser.
+* If .raw files are going to be fed directly to Dream-DIA in Linux systems, [mono](https://www.mono-project.com/download/stable/#download-lin) must be installed first for the data format conversion by ThermoRawFileParser.
+
+* You can also use our docker image to process .raw files directly, while it may take some time for data format conversion.
+
+  ```shell
+  # /tmp/dreamdia_example
+  python ../Dream-DIA/DreamDIA.py dreamscore --file_dir raw_data_raw --lib lib.tsv --win win.tsv --out example_results_raw
+  ```
 
 All raw data files should be at the same directory as below. 
 

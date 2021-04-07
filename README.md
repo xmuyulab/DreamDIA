@@ -143,4 +143,4 @@ Dream-DIA needs a tab separated window setting file **without overlapping** amon
 
 #### 4. output
 
-Dream-DIA outputs identification and quantification results. A blank directory is suggested for the `--out` argument to save all of the output files.
+Dream-DIA outputs peptide and protein identification and quantification results. An empty directory is suggested for the `--out` argument to save all of the output files.

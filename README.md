@@ -41,6 +41,7 @@ The testing results will be in `example_results`.
 ### Requirements
 
 ```
+Linux
 python >= 3.6.0
 pyteomics
 numpy

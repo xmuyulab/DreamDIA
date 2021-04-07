@@ -19,6 +19,7 @@ docker run -it --name dreamdia_example --gpus all -v /YOUR/OWN/WORK/PATH:/tmp/wo
 ```
 
 * Using the argument `--gpus all` will considerably accelerate the Dream-DIA pipeline if you have some GPUs.
+* It may be slow to run Dream-DIA without GPUs now. We are still working on improving the efficiency of our software.
 
 3. Activate the conda environment.
 

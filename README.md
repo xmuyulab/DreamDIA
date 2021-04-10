@@ -53,7 +53,7 @@ keras-gpu
 xgboost
 ```
 
-If .raw files are going to be fed directly to Dream-DIA in Linux systems, [mono](https://www.mono-project.com/download/stable/#download-lin) must be installed.
+If .raw files are going to be fed directly to Dream-DIA-XMBD in Linux systems, [mono](https://www.mono-project.com/download/stable/#download-lin) must be installed.
 
 ### Installation
 

@@ -18,7 +18,7 @@ docker pull mingxuangao/dreamdia:v1.0.0
 docker run -it --name dreamdia_example --gpus all -v /YOUR/OWN/WORK/PATH:/tmp/work mingxuangao/dreamdia:v1.0.0 /bin/bash
 ```
 
-* Using the argument `--gpus all` will considerably accelerate the Dream-DIA pipeline if you have some GPUs.
+* Using the argument `--gpus all` will considerably accelerate the Dream-DIA-XMBD pipeline if you have some GPUs.
 
 3. Activate the conda environment.
 
@@ -79,7 +79,7 @@ python Dream-DIA/DreamDIA.py dreamscore --file_dir rawdata_dir --lib library.tsv
 
 * Centroided .mzML or .mzXML files are supported at any time. 
 
-* If .raw files are going to be fed directly to Dream-DIA in Linux systems, [mono](https://www.mono-project.com/download/stable/#download-lin) must be installed first for the data format conversion by ThermoRawFileParser.
+* If .raw files are going to be fed directly to Dream-DIA-XMBD in Linux systems, [mono](https://www.mono-project.com/download/stable/#download-lin) must be installed first for the data format conversion by ThermoRawFileParser.
 
 * You can also use our docker image to process .raw files directly, while it may take some time for data format conversion.
 
@@ -99,11 +99,11 @@ All raw data files should be at the same directory as below.
 
 #### 2. Spectral libraries
 
-Only .tsv libraries are supported. All of the fields required by Dream-DIA are listed in `Dream-DIA/lib_col_settings`. Users can modify this file to adjust their own spectral libraries.
+Only .tsv libraries are supported. All of the fields required by Dream-DIA-XMBD are listed in `Dream-DIA/lib_col_settings`. Users can modify this file to adjust their own spectral libraries.
 
 #### 3. window setting file
 
-Dream-DIA needs a tab separated window setting file **without overlapping** among the isolation windows as OpenSWATH. An example window setting file for classical SWATH acquisition strategy is shown below.
+Dream-DIA-XMBD needs a tab separated window setting file **without overlapping** among the isolation windows as OpenSWATH. An example window setting file for classical SWATH acquisition strategy is shown below.
 
 ```
 399     424.5
@@ -142,4 +142,4 @@ Dream-DIA needs a tab separated window setting file **without overlapping** amon
 
 #### 4. output
 
-Dream-DIA outputs peptide and protein identification and quantification results. An empty directory is suggested for the `--out` argument to save all of the output files.
+Dream-DIA-XMBD outputs peptide and protein identification and quantification results. An empty directory is suggested for the `--out` argument to save all of the output files.

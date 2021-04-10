@@ -59,7 +59,7 @@ If .raw files are going to be fed directly to Dream-DIA-XMBD in Linux systems, [
 
 ```bash
 git clone https://github.com/xmuyulab/Dream-DIA-XMBD
-cd Dream-DIA
+cd Dream-DIA-XMBD
 bash build.sh
 ```
 

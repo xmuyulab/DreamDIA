@@ -55,6 +55,9 @@ xgboost
 
 If .raw files are going to be fed directly to Dream-DIA-XMBD in Linux systems, [mono](https://www.mono-project.com/download/stable/#download-lin) must be installed.
 
+### Download
+https://github.com/xmuyulab/Dream-DIA-XMBD/releases/tag/v2.0.1
+
 ### Installation
 
 ```bash

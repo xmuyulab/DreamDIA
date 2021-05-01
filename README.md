@@ -61,8 +61,7 @@ https://github.com/xmuyulab/Dream-DIA-XMBD/releases/tag/v2.0.1
 ### Installation
 
 ```bash
-git clone https://github.com/xmuyulab/DreamDIA-XMBD
-cd DreamDIA-XMBD
+cd DreamDIA-XMBD-vXXX
 bash build.sh
 ```
 

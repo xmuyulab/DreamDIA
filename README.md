@@ -9,13 +9,13 @@ Software for data-independent acquisition (DIA) data analysis with deep represen
 1. Pull the docker image from DockerHub.
 
 ```shell
-docker pull mingxuangao/dreamdia:v1.0.0
+docker pull mingxuangao/dreamdia:v2.0.1
 ```
 
 2. Enter a container for testing.
 
 ```shell
-docker run -it --name dreamdia_example --gpus all -v /YOUR/OWN/WORK/PATH:/tmp/work mingxuangao/dreamdia:v1.0.0 /bin/bash
+docker run -it --name dreamdia_example --gpus all -v /YOUR/OWN/WORK/PATH:/tmp/work mingxuangao/dreamdia:v2.0.1 /bin/bash
 ```
 
 * Using the argument `--gpus all` will considerably accelerate the DreamDIA-XMBD pipeline if you have some GPUs.

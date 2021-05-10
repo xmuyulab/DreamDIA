@@ -53,10 +53,10 @@ keras-gpu
 xgboost
 ```
 
-If .raw files are going to be fed directly to Dream-DIA-XMBD in Linux systems, [mono](https://www.mono-project.com/download/stable/#download-lin) must be installed.
+If .raw files are going to be fed directly to DreamDIA-XMBD in Linux systems, [mono](https://www.mono-project.com/download/stable/#download-lin) must be installed.
 
 ### Download
-https://github.com/xmuyulab/Dream-DIA-XMBD/releases/tag/v2.0.1
+https://github.com/xmuyulab/DreamDIA-XMBD/releases/tag/v2.0.1
 
 ### Installation
 
@@ -68,11 +68,11 @@ bash build.sh
 ## Quick start
 
 ```bash
-python Dream-DIA/DreamDIA.py dreamscore --help
+python DreamDIA-XMBD-vXXX/DreamDIA.py dreamscore --help
 ```
 
 ```bash
-python Dream-DIA/DreamDIA.py dreamscore --file_dir rawdata_dir --lib library.tsv --win win.tsv --out output_dir
+python DreamDIA-XMBD-vXXX/DreamDIA.py dreamscore --file_dir rawdata_dir --lib library.tsv --win win.tsv --out output_dir
 ```
 
 ## Notes

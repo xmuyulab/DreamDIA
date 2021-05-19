@@ -94,7 +94,7 @@ https://github.com/xmuyulab/DreamDIA-XMBD/tree/main/example_data
 ##### (2) run
 
 ```shell
-python PATH/TO/DreamDIA-XMBD-vXXX/Dream-DIA/DreamDIA.py dreamscore --file_dir example_data/raw_data --lib example_data/lib.tsv --win example_data/win.tsv --out example_data/example_results
+python PATH/TO/DreamDIA-XMBD-vXXX/DreamDIA.py dreamscore --file_dir example_data/raw_data --lib example_data/lib.tsv --win example_data/win.tsv --out example_data/example_results
 ```
 
 ## 3. Quick start

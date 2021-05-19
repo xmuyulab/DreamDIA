@@ -18,7 +18,7 @@ docker pull mingxuangao/dreamdia:v2.0.1
 docker run -it --name dreamdia_example --gpus all -v /YOUR/OWN/WORK/PATH:/tmp/work mingxuangao/dreamdia:v2.0.1 /bin/bash
 ```
 
-* Using the argument `--gpus all` will considerably accelerate the DreamDIA-XMBD pipeline if you have some GPUs.
+* Using the argument `--gpus all` will considerably accelerate the DreamDIA-XMBD pipeline if you have some GPUs. 
 
 3. Activate the conda environment.
 
@@ -50,10 +50,30 @@ cython
 scikit-learn
 tensorflow
 keras-gpu
+statsmodels
 xgboost
 ```
 
 If .raw files are going to be fed directly to DreamDIA-XMBD in Linux systems, [mono](https://www.mono-project.com/download/stable/#download-lin) must be installed.
+
+We recommend to use [Anaconda](https://www.anaconda.com/products/individual#Downloads) to build the environment and install the required libraries as follows.
+
+```shell
+# Initiate a conda virtual environment called "dreamdia"
+conda create -n dreamdia python=3.6.12
+
+# Activate the "dreamdia" virtual environment
+conda activate dreamdia
+
+# Install the libraries
+conda install -y keras-gpu
+conda install -y scikit-learn
+conda install -y py-xgboost-cpu
+conda install -y cython
+conda install -y seaborn
+conda install -y statsmodels
+conda install -y pyteomics -c bioconda
+```
 
 ### Download
 https://github.com/xmuyulab/DreamDIA-XMBD/releases/tag/v2.0.1

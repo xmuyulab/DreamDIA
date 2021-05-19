@@ -2,9 +2,9 @@
 
 Software for data-independent acquisition (DIA) data analysis with deep representation features.
 
-## Docker image & quick example
+## 1. Docker image & quick example
 
-**We recommend to use docker containers to avoid complicated installation and compilation.** 
+### We recommend to use docker containers to avoid complicated installation and compilation.
 
 1. Pull the docker image from DockerHub.
 
@@ -35,7 +35,7 @@ python ../Dream-DIA/DreamDIA.py dreamscore --file_dir raw_data --lib lib.tsv --w
 
 The testing results will be in `example_results`.
 
-## Build from source
+## 2. Build from source
 
 ### Requirements
 
@@ -65,7 +65,19 @@ cd DreamDIA-XMBD-vXXX
 bash build.sh
 ```
 
-## Quick start
+### Run the example
+
+##### (1) download the example data
+
+https://github.com/xmuyulab/DreamDIA-XMBD/tree/main/example_data
+
+##### (2) run
+
+```shell
+python PATH/TO/DreamDIA-XMBD-vXXX/Dream-DIA/DreamDIA.py dreamscore --file_dir example_data/raw_data --lib example_data/lib.tsv --win example_data/win.tsv --out example_data/example_results
+```
+
+## 3. Quick start
 
 ```bash
 python DreamDIA-XMBD-vXXX/DreamDIA.py dreamscore --help
@@ -75,7 +87,7 @@ python DreamDIA-XMBD-vXXX/DreamDIA.py dreamscore --help
 python DreamDIA-XMBD-vXXX/DreamDIA.py dreamscore --file_dir rawdata_dir --lib library.tsv --win win.tsv --out output_dir
 ```
 
-## Notes
+## 4. Notes
 
 #### 1. DIA raw data files
 

@@ -1,7 +1,7 @@
-# Column names of a spectral library required by Dream-DIA.
+# Column names of a spectral library required by DreamDIA-XMBD.
 
 # Notes:
-# 1. Dream-DIA is compatible with spectral libraries from spectraST by default.
+# 1. DreamDIA-XMBD is compatible with spectral libraries from spectraST by default.
 # 2. You can modify the right side of the following equals signs to specify the column names of your own spectral library.
 # 3. All the modifications in the spectral library must be in the UniMod format.
 

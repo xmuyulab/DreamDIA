@@ -40,10 +40,9 @@ def get_mod_indice(sort_base):
             mod += sort_base[i]
     return poses, mods
 
-def decoy_generator(library, lib_cols, precursor_indice, original_colnames, result_collector, seed):
+def decoy_generator(library, lib_cols, precursor_indice, original_colnames, result_collector, fixed_colnames, seed):
     product_mz, peptide_sequence, full_uniMod_peptide_name = [], [], []
     transition_group_id, decoy, protein_name = [], [], []
-    # optional_columns : "transition_name", "PeptideGroupLabel"
     transition_name, peptide_group_label = [], []
 
     valid_indice = []
@@ -111,7 +110,7 @@ def decoy_generator(library, lib_cols, precursor_indice, original_colnames, resu
 
     result_collector.append([product_mz, peptide_sequence, full_uniMod_peptide_name, 
                              transition_group_id, decoy, protein_name, transition_name, 
-                             peptide_group_label, valid_indice])
+                             peptide_group_label, library.iloc[valid_indice, :].loc[:, fixed_colnames]])
 
 def generate_decoys(lib, do_not_output_library, n_threads, seed, mz_min, mz_max, n_frags_each_precursor, logger):
     output_filename = os.path.join(os.path.dirname(lib), os.path.basename(lib)[:-4] + ".DreamDIA.with_decoys.tsv")
@@ -123,7 +122,7 @@ def generate_decoys(lib, do_not_output_library, n_threads, seed, mz_min, mz_max,
     library = library[(library[lib_cols["PRECURSOR_MZ_COL"]] >= mz_min) & (library[lib_cols["PRECURSOR_MZ_COL"]] < mz_max)]
     library = library[(library[lib_cols["FRAGMENT_MZ_COL"]] >= mz_min) & (library[lib_cols["FRAGMENT_MZ_COL"]] < mz_max)]
     library.index = [i for i in range(library.shape[0])]
-    
+
     precursor_indice = get_precursor_indice(library[lib_cols["PRECURSOR_ID_COL"]])
     too_few_indice = flatten_list([i for i in precursor_indice if len(i) < n_frags_each_precursor])
     library.drop(too_few_indice, inplace = True)
@@ -143,7 +142,7 @@ def generate_decoys(lib, do_not_output_library, n_threads, seed, mz_min, mz_max,
         decoy_types = library["decoy"].value_counts()
         if 0 in decoy_types and 1 in decoy_types:
             if decoy_types[1] > 0.5 * decoy_types[0]:
-                logger.info("The spectral library has enough decoys, so Dream-DIA will not generate more.")
+                logger.info("The spectral library has enough decoys, so DreamDIA-XMBD will not generate more.")
                 if not do_not_output_library:
                     library.to_csv(output_filename, sep = "\t", index = False)
                 return lib_cols, library
@@ -155,7 +154,7 @@ def generate_decoys(lib, do_not_output_library, n_threads, seed, mz_min, mz_max,
     for i, chunk_index in enumerate(chunk_indice):
         precursor_index = [precursor_indice[idx] for idx in chunk_index]
         p = multiprocessing.Process(target = decoy_generator, 
-                                    args = (library, lib_cols, precursor_index, original_colnames, result_collectors[i], seed, ))
+                                    args = (library, lib_cols, precursor_index, original_colnames, result_collectors[i], fixed_colnames, seed, ))
         generators.append(p)
         p.daemon = True
         p.start()
@@ -171,7 +170,7 @@ def generate_decoys(lib, do_not_output_library, n_threads, seed, mz_min, mz_max,
     protein_name = flatten_list([collector[0][5] for collector in result_collectors])
     transition_name = flatten_list([collector[0][6] for collector in result_collectors])
     peptide_group_label = flatten_list([collector[0][7] for collector in result_collectors])
-    valid_indice = flatten_list([collector[0][8] for collector in result_collectors])
+    fixed_part = pd.concat([collector[0][8] for collector in result_collectors])
 
     modified_part = pd.DataFrame({lib_cols["FRAGMENT_MZ_COL"] : product_mz, 
                                   lib_cols["PURE_SEQUENCE_COL"] : peptide_sequence, 
@@ -184,7 +183,8 @@ def generate_decoys(lib, do_not_output_library, n_threads, seed, mz_min, mz_max,
     if "PeptideGroupLabel" in original_colnames:
         modified_part["PeptideGroupLabel"] = peptide_group_label
 
-    fixed_part = library.iloc[valid_indice, ].loc[:, fixed_colnames]
+    modified_part.index = [nn for nn in range(modified_part.shape[0])]
+    fixed_part.index = [nn for nn in range(fixed_part.shape[0])]
     
     if "decoy" in original_colnames:
         decoy_data = pd.concat([modified_part, fixed_part], axis = 1).loc[:, original_colnames]

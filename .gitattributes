@@ -1,1 +1,2 @@
 example_data/raw_data/BGS_D_D180420_S416-newPrep-DIA-D-S1-1_MHRM_R01_T0.zip filter=lfs diff=lfs merge=lfs -text
+example_data/raw_data/BGS_D_D180420_S416-newPrep-DIA-D-S1-1_MHRM_R01_T0.mzXML filter=lfs diff=lfs merge=lfs -text

@@ -171,7 +171,7 @@ def quant(gp_rank, ms2_areas, lib_pearsons):
     selected_area_string = ms2_areas.strip().split(";")[gp_rank - 1]
     selected_area = np.array([float(i) for i in selected_area_string.strip().split("|")])
     weights = np.array([float(i) for i in lib_pearsons.strip().split(";")[gp_rank - 1].split("|")])    
-    return selected_area.dot(weights) / len(weights)
+    return max(0, selected_area.dot(weights) / len(weights))
 def combine_res(dream_score_res_files, lib_cols):
     dream_score_res = pd.read_csv(dream_score_res_files[0], sep = "\t")
     dream_score_res[lib_cols["PRECURSOR_ID_COL"] + "_original"] = list(dream_score_res[lib_cols["PRECURSOR_ID_COL"]])

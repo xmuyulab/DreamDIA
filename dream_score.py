@@ -10,7 +10,7 @@ from rt_normalization import load_irt_precursors, extract_irt_xics, score_irt, f
 from score_peak_groups import load_precursors, extract_precursors, score_batch
 from dream_prophet import combine_res, dream_prophet
 from utils import load_rawdata, endoIRT_generator, tear_library
-def dream_score(file_dir, lib, win, out, n_threads, seed, mz_unit, mz_min, mz_max, mz_tol_ms1, mz_tol_ms2, fdr_precursor, fdr_protein, n_irt, top_k, n_cycles, n_frags_each_precursor, do_not_output_library, model_cycles, n_lib_frags, n_self_frags, n_qt3_frags, n_ms1_frags, n_iso_frags, n_light_frags, prophet_mode, disc_model, dream_indicators, rt_norm_model, score0_cutoff, score2_cutoff, out_chrom):
+def dream_score(file_dir, lib, win, out, n_threads, seed, mz_unit, mz_min, mz_max, mz_tol_ms1, mz_tol_ms2, fdr_precursor, fdr_protein, n_irt, top_k, n_cycles, n_frags_each_precursor, do_not_output_library, model_cycles, n_lib_frags, n_self_frags, n_qt3_frags, n_ms1_frags, n_iso_frags, n_light_frags, prophet_mode, disc_model, dream_indicators, rt_norm_model, score0_cutoff, score2_cutoff, out_chrom, decoy_method):
     logging.basicConfig(level = logging.INFO, format = "DreamDIA-XMBD: %(asctime)s - %(levelname)s - %(message)s")
     logger = logging.getLogger()
     logger.info("Welcome to DreamDIA-XMBD!")
@@ -23,7 +23,7 @@ def dream_score(file_dir, lib, win, out, n_threads, seed, mz_unit, mz_min, mz_ma
     score_cutoff = 0.95
     batch_size = 400    
     logger.info("Load spectral library and generate decoys: %s" % lib)  
-    lib_cols, library = generate_decoys(lib, do_not_output_library, n_threads, seed, mz_min, mz_max, n_frags_each_precursor, logger)
+    lib_cols, library = generate_decoys(lib, do_not_output_library, n_threads, seed, mz_min, mz_max, n_frags_each_precursor, decoy_method, logger)
     irt_library = endoIRT_generator(lib_cols, library, n_irt)
     irt_precursors, irt_chunk_indice = load_irt_precursors(irt_library, lib_cols, mz_min, mz_max, iso_range, n_threads)
     logger.info("Calculate m/z values of the ions...")

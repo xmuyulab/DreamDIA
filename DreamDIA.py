@@ -6,7 +6,7 @@ CONTEXT_SETTINGS = dict(help_option_names = ['-h', '--help'], max_content_width 
 def print_version(ctx, param, value):
     if not value or ctx.resilient_parsing:
         return
-    click.echo('DreamDIA-XMBD Version 2.0.1')
+    click.echo('DreamDIA-XMBD Version 2.0.2')
     ctx.exit()
 @click.group(context_settings = CONTEXT_SETTINGS)
 @click.option('--version', is_flag = True, callback = print_version, expose_value = False, is_eager = True, help = "Print version and exit.")
@@ -40,12 +40,13 @@ def dreamdia():
 @click.option("--n_light_frags", default = "20", show_default = True, type = int, help = "(# Do not modify this argument unless customed deep representation models are used.) Number of XICs in 'light' part of the RSMs of the deep representation models.")
 @click.option("--prophet_mode", default = "local", show_default = True, type = click.Choice(["local", "global"]), help = "Train a disciminant model on the RSMs of each sample respectively (local) or train a discriminant model on all the RSMs from all the samples (global).")
 @click.option("--disc_model", default = "xgboost", show_default = True, type = click.Choice(["xgboost", "rf"]), help = "Type of the discriminant model.")
-@click.option("--dream_indicators", is_flag = True, help = "Activate Dream-Indicators to search better hyper-parameters for the discriminant model. If this option is not activated, the depths of the trees in the discriminant model will be heuristically set to 10.")
+@click.option("--dream_indicators", is_flag = True, help = "[Deprecated] Activate Dream-Indicators to search better hyper-parameters for the discriminant model. If this option is not activated, the depths of the trees in the discriminant model will be heuristically set to a fixed value.")
 @click.option("--rt_norm_model", default = "nonlinear", show_default = True, type = click.Choice(['linear', 'nonlinear']), help = "Use linear or nonlinear model for RT normalizaiton.")
 @click.option("--score0_cutoff", default = "500", show_default = True, type = float, help = "Cut off value of score0.")
 @click.option("--score2_cutoff", default = "0.15", show_default = True, type = float, help = "Cut off value of score2.")
 @click.option("--out_chrom", is_flag = True, help = "Whether to output chromatograms for debugging.")
-def dreamScore(file_dir, lib, win, out, n_threads, seed, mz_unit, mz_min, mz_max, mz_tol_ms1, mz_tol_ms2, fdr_precursor, fdr_protein, n_irt, top_k, n_cycles, n_frags_each_precursor, do_not_output_library, model_cycles, n_lib_frags, n_self_frags, n_qt3_frags, n_ms1_frags, n_iso_frags, n_light_frags, prophet_mode, disc_model, dream_indicators, rt_norm_model, score0_cutoff, score2_cutoff, out_chrom):    
-    dream_score(file_dir, lib, win, out, n_threads, seed, mz_unit, mz_min, mz_max, mz_tol_ms1, mz_tol_ms2, fdr_precursor, fdr_protein, n_irt, top_k, n_cycles, n_frags_each_precursor, do_not_output_library, model_cycles, n_lib_frags, n_self_frags, n_qt3_frags, n_ms1_frags, n_iso_frags, n_light_frags, prophet_mode, disc_model, dream_indicators, rt_norm_model, score0_cutoff, score2_cutoff, out_chrom)
+@click.option("--decoy_method", default = "shuffle", show_default = True, type = click.Choice(["shuffle", "reverse", "pseudo_reverse", "shift", "mutate"]), help = "Decoy generation method.")
+def dreamScore(file_dir, lib, win, out, n_threads, seed, mz_unit, mz_min, mz_max, mz_tol_ms1, mz_tol_ms2, fdr_precursor, fdr_protein, n_irt, top_k, n_cycles, n_frags_each_precursor, do_not_output_library, model_cycles, n_lib_frags, n_self_frags, n_qt3_frags, n_ms1_frags, n_iso_frags, n_light_frags, prophet_mode, disc_model, dream_indicators, rt_norm_model, score0_cutoff, score2_cutoff, out_chrom, decoy_method):    
+    dream_score(file_dir, lib, win, out, n_threads, seed, mz_unit, mz_min, mz_max, mz_tol_ms1, mz_tol_ms2, fdr_precursor, fdr_protein, n_irt, top_k, n_cycles, n_frags_each_precursor, do_not_output_library, model_cycles, n_lib_frags, n_self_frags, n_qt3_frags, n_ms1_frags, n_iso_frags, n_light_frags, prophet_mode, disc_model, dream_indicators, rt_norm_model, score0_cutoff, score2_cutoff, out_chrom, decoy_method)
 if __name__ == "__main__":
     dreamdia()

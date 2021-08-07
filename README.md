@@ -9,13 +9,13 @@ Software for data-independent acquisition (DIA) data analysis with deep represen
 1. Pull the docker image from DockerHub.
 
 ```shell
-docker pull mingxuangao/dreamdia:v2.0.1
+docker pull mingxuangao/dreamdia:v2.0.2
 ```
 
 2. Enter a container for testing.
 
 ```shell
-docker run -it --name dreamdia_example --gpus all -v /YOUR/OWN/WORK/PATH:/tmp/work mingxuangao/dreamdia:v2.0.1 /bin/bash
+docker run -it --name dreamdia_example --gpus all -v /YOUR/OWN/WORK/PATH:/tmp/work mingxuangao/dreamdia:v2.0.2 /bin/bash
 ```
 
 * Using the argument `--gpus all` will considerably accelerate the DreamDIA-XMBD pipeline if you have some GPUs. 
@@ -76,7 +76,7 @@ conda install -y pyteomics -c bioconda
 ```
 
 ### Download
-https://github.com/xmuyulab/DreamDIA-XMBD/releases/tag/v2.0.1
+https://github.com/xmuyulab/DreamDIA-XMBD/releases/tag/v2.0.2
 
 ### Installation
 
@@ -177,3 +177,7 @@ DreamDIA-XMBD needs a tab separated window setting file **without overlapping** 
 #### 4. output
 
 DreamDIA-XMBD outputs peptide and protein identification and quantification results. An empty directory is suggested for the `--out` argument to save all of the output files.
+
+#### 5. Advanced: train your own deep representation models
+
+See the guidance in `Train_customized_models.ipynb` to train your own deep representation models.

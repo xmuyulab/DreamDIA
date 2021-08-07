@@ -41,6 +41,12 @@ class Precursor:
         self.precursor_win_id = None
         self.ms1_areas = []
         self.ms2_areas = []
+        
+        # add
+        self.self_areas = []
+        self.self_pearsons = []
+        # add done
+
         self.lib_frags_real_intensities = []
         self.lib_pearsons = [] 
         self.self_frags, self.self_frag_charges = np.array(calc_all_fragment_mzs(self.full_sequence, 
@@ -93,6 +99,10 @@ def extract_precursors(ms1, ms2, win_range, precursor_list, matrix_queue,
                        n_cycles, model_cycles, mz_unit, mz_min, mz_max, mz_tol_ms1, mz_tol_ms2, iso_range, 
                        n_lib_frags, n_self_frags, n_qt3_frags, n_ms1_frags, n_iso_frags, n_light_frags, 
                        peak_index_range, rt_norm_model, rt_model_params, p_id): 
+    # add
+    n_self_quant_frags = 3
+    # add done
+
     peak_indice = get_peak_indice(model_cycles, peak_index_range)
     feature_dimension = n_lib_frags * 3 + n_self_frags + n_qt3_frags + n_ms1_frags + n_iso_frags + n_light_frags
     for idx, precursor in enumerate(precursor_list): 
@@ -162,9 +172,29 @@ def extract_precursors(ms1, ms2, win_range, precursor_list, matrix_queue,
                 if self_xics.shape[0] > 1 and len(std_indice) >= 1:
                     self_pearson = np.array([tools.calc_pearson(self_xics[i, :], lib_xics[0, :]) for i in range(self_xics.shape[0])])
                     self_xics = self_xics[np.argsort(-self_pearson), :]
+
+                    # add
+                    self_areas = pad_list_with_zeros([tools.calc_area(self_xics[i, :], precursor_rt_list_part_diff) for i in range(self_xics.shape[0])], n_self_quant_frags)
+                    self_pearsons = pad_list_with_zeros(list(self_pearson), n_self_quant_frags)
+                    precursor.self_areas.append("|".join([str(each) for each in self_areas]))
+                    precursor.self_pearsons.append("|".join([str(each) for each in self_pearsons]))
+                    # add done
+
+                # add
+                else:
+                    precursor.self_areas.append("|".join(["0"] * n_self_quant_frags))
+                    precursor.self_pearsons.append("|".join(["0"] * n_self_quant_frags))
+                # add done
+
                 if qt3_xics.shape[0] > 1 and len(std_indice) >= 1:
                     qt3_pearson = np.array([tools.calc_pearson(qt3_xics[i, :], lib_xics[0, :]) for i in range(qt3_xics.shape[0])])
                     qt3_xics = qt3_xics[np.argsort(-qt3_pearson), :]
+
+            # add
+            else:
+                precursor.self_areas.append("|".join(["0"] * n_self_quant_frags))
+                precursor.self_pearsons.append("|".join(["0"] * n_self_quant_frags))
+
             lib_matrix = adjust_size(lib_xics, n_lib_frags)
             lib_matrix_1 = adjust_size(lib_xics_1, n_lib_frags)
             lib_matrix_2 = adjust_size(lib_xics_2, n_lib_frags)
@@ -174,6 +204,24 @@ def extract_precursors(ms1, ms2, win_range, precursor_list, matrix_queue,
             iso_matrix = adjust_size(iso_xics, n_iso_frags)
             light_matrix = adjust_size(light_xics, n_light_frags)   
             training_matrix = np.zeros((feature_dimension, model_cycles))
+
+            if lib_matrix.shape[1] != model_cycles:
+                lib_matrix = adjust_cycle(lib_matrix, model_cycles)
+            if self_matrix.shape[1] != model_cycles:
+                self_matrix = adjust_cycle(self_matrix, model_cycles)
+            if qt3_matrix.shape[1] != model_cycles:
+                qt3_matrix = adjust_cycle(qt3_matrix, model_cycles)
+            if ms1_matrix.shape[1] != model_cycles:
+                ms1_matrix = adjust_cycle(ms1_matrix, model_cycles)
+            if iso_matrix.shape[1] != model_cycles:
+                iso_matrix = adjust_cycle(iso_matrix, model_cycles)
+            if light_matrix.shape[1] != model_cycles:
+                light_matrix = adjust_cycle(light_matrix, model_cycles)
+            if lib_matrix_1.shape[1] != model_cycles:
+                lib_matrix_1 = adjust_cycle(lib_matrix_1, model_cycles)
+            if lib_matrix_2.shape[1] != model_cycles:
+                lib_matrix_2 = adjust_cycle(lib_matrix_2, model_cycles)
+            
             part1_indice = (0, 
                             lib_matrix.shape[0])
             part2_indice = (n_lib_frags, 
@@ -216,7 +264,7 @@ def score_batch(matrix_queue, lib_cols, BM_model_file, RM_model_file, out_file, 
     out_head_1 = "%s\tfilename\tRT\t%s\t%s\t" % (lib_cols["PRECURSOR_ID_COL"], lib_cols["PURE_SEQUENCE_COL"], lib_cols["FULL_SEQUENCE_COL"])
     out_head_2 = "%s\t%s\t%s\t%s\tassay_rt\tdelta_rt\t" % (lib_cols["PRECURSOR_CHARGE_COL"], lib_cols["PRECURSOR_MZ_COL"], lib_cols["PROTEIN_NAME_COL"], lib_cols["DECOY_OR_NOT_COL"])
     out_head_3 = "%s\tnr_peaks\treal_intensities\tlib_cos_scores\t" % lib_cols["IRT_COL"]
-    out_head_4 = "dream_scores\tms1_area\tms2_areas\taggr_Fragment_Annotation\tlib_pearsons\tdrf_scores\n"
+    out_head_4 = "dream_scores\tms1_area\tms2_areas\tself_areas\tself_pearsons\taggr_Fragment_Annotation\tlib_pearsons\tdrf_scores\n"
     n_none = 0
     precursor_count = 0
     results = []
@@ -265,6 +313,12 @@ def score_batch(matrix_queue, lib_cols, BM_model_file, RM_model_file, out_file, 
                 dream_score_kept = list(scores[score_order])
                 ms1_area_kept = list(np.array(precursor.ms1_areas)[score_order])
                 ms2_area_kept = list(np.array(precursor.ms2_areas)[score_order])
+
+                # add
+                self_area_kept = list(np.array(precursor.self_areas)[score_order])
+                self_pearson_kept = list(np.array(precursor.self_pearsons)[score_order])
+                # add done
+
                 frag_kept = [i.format_output() for i in precursor.lib_frags]
                 lib_pearsons_kept = ["|".join([str(k) for k in precursor.lib_pearsons[idx]]) for idx in score_order]
                 drf_scores_kept = ["|".join([str(k) for k in i]) for i in list(drf_scores[score_order])]
@@ -286,6 +340,8 @@ def score_batch(matrix_queue, lib_cols, BM_model_file, RM_model_file, out_file, 
                            "dream_scores" : ";".join([str(i) for i in dream_score_kept]), 
                            "ms1_area" : ";".join(ms1_area_kept), 
                            "ms2_area" : ";".join(ms2_area_kept), 
+                           "self_area" : ";".join(self_area_kept), 
+                           "self_pearson" : ";".join(self_pearson_kept), 
                            "aggr_Fragment_Annotation" : ";".join(frag_kept), 
                            "lib_pearsons" : ";".join(lib_pearsons_kept),
                            "drf_scores" : ";".join(drf_scores_kept)}
@@ -294,7 +350,7 @@ def score_batch(matrix_queue, lib_cols, BM_model_file, RM_model_file, out_file, 
                 out_string_3 = "%(m/z)s\t%(ProteinName)s\t%(decoy)s\t"
                 out_string_4 = "%(assay_rt)s\t%(delta_rt)s\t%(norm_rt)s\t"
                 out_string_5 = "%(nr_peaks)s\t%(real_intensities)s\t%(lib_cos_scores)s\t"
-                out_string_6 = "%(dream_scores)s\t%(ms1_area)s\t%(ms2_area)s\t%(aggr_Fragment_Annotation)s\t%(lib_pearsons)s\t%(drf_scores)s"
+                out_string_6 = "%(dream_scores)s\t%(ms1_area)s\t%(ms2_area)s\t%(self_area)s\t%(self_pearson)s\t%(aggr_Fragment_Annotation)s\t%(lib_pearsons)s\t%(drf_scores)s"
                 out_string = out_string_1 + out_string_2 + out_string_3 + out_string_4 + out_string_5 + out_string_6 + "\n"
                 results.append(out_string % out_string_dict)          
             batch_precursor = []
@@ -323,6 +379,12 @@ def score_batch(matrix_queue, lib_cols, BM_model_file, RM_model_file, out_file, 
             dream_score_kept = list(scores[score_order])
             ms1_area_kept = list(np.array(precursor.ms1_areas)[score_order])
             ms2_area_kept = list(np.array(precursor.ms2_areas)[score_order])
+
+            # add
+            self_area_kept = list(np.array(precursor.self_areas)[score_order])
+            self_pearson_kept = list(np.array(precursor.self_pearsons)[score_order])
+            # add done
+
             frag_kept = [i.format_output() for i in precursor.lib_frags]
             lib_pearsons_kept = ["|".join([str(k) for k in precursor.lib_pearsons[idx]]) for idx in score_order]
             drf_scores_kept = ["|".join([str(k) for k in i]) for i in list(drf_scores[score_order])]   
@@ -344,6 +406,8 @@ def score_batch(matrix_queue, lib_cols, BM_model_file, RM_model_file, out_file, 
                         "dream_scores" : ";".join([str(i) for i in dream_score_kept]), 
                         "ms1_area" : ";".join(ms1_area_kept), 
                         "ms2_area" : ";".join(ms2_area_kept), 
+                        "self_area" : ";".join(self_area_kept), 
+                        "self_pearson" : ";".join(self_pearson_kept), 
                         "aggr_Fragment_Annotation" : ";".join(frag_kept), 
                         "lib_pearsons" : ";".join(lib_pearsons_kept),
                         "drf_scores" : ";".join(drf_scores_kept)}
@@ -352,7 +416,7 @@ def score_batch(matrix_queue, lib_cols, BM_model_file, RM_model_file, out_file, 
             out_string_3 = "%(m/z)s\t%(ProteinName)s\t%(decoy)s\t"
             out_string_4 = "%(assay_rt)s\t%(delta_rt)s\t%(norm_rt)s\t"
             out_string_5 = "%(nr_peaks)s\t%(real_intensities)s\t%(lib_cos_scores)s\t"
-            out_string_6 = "%(dream_scores)s\t%(ms1_area)s\t%(ms2_area)s\t%(aggr_Fragment_Annotation)s\t%(lib_pearsons)s\t%(drf_scores)s"
+            out_string_6 = "%(dream_scores)s\t%(ms1_area)s\t%(ms2_area)s\t%(self_area)s\t%(self_pearson)s\t%(aggr_Fragment_Annotation)s\t%(lib_pearsons)s\t%(drf_scores)s"
             out_string = out_string_1 + out_string_2 + out_string_3 + out_string_4 + out_string_5 + out_string_6 + "\n"
             results.append(out_string % out_string_dict)
     with open(out_file, "w") as out_f:

@@ -56,6 +56,7 @@ FRAGMENT_MASS_DICT = precompute_fragment_mass()
 unimod1_mass = 2 * mono_masses['C'] + mono_masses['O'] + 2 * mono_masses['H']
 unimod4_mass = 57.021464 
 unimod5_mass = mono_masses['C'] + mono_masses['N'] + mono_masses['O']
+unimod7_mass = 0.9840 
 unimod21_mass = mono_masses['H'] + 3 * mono_masses['O'] + mono_masses['P'] 
 unimod26_mass = 2 * mono_masses['C'] + mono_masses['O'] 
 unimod27_mass = -2 * mono_masses['H'] - mono_masses['O'] 
@@ -76,6 +77,7 @@ def calc_fragment_mz(full_seq, pure_peptide_seq, charge, ion_type):
     unimod1_count = fragment_seq.count("(UniMod:1)")
     unimod4_count = fragment_seq.count("(UniMod:4)")
     unimod5_count = fragment_seq.count("(UniMod:5)")
+    unimod7_count = fragment_seq.count("(UniMod:7)")
     unimod21_count = fragment_seq.count("(UniMod:21)")
     unimod26_count = fragment_seq.count("(UniMod:26)")
     unimod27_count = fragment_seq.count("(UniMod:27)")
@@ -89,6 +91,7 @@ def calc_fragment_mz(full_seq, pure_peptide_seq, charge, ion_type):
     fragment_mass += (unimod1_count * unimod1_mass + 
                       unimod4_count * unimod4_mass + 
                       unimod5_count * unimod5_mass + 
+                      unimod7_count * unimod7_mass + 
                       unimod35_count * unimod35_mass + 
                       unimod28_count * unimod28_mass + 
                       unimod21_count * unimod21_mass + 

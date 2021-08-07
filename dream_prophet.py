@@ -316,6 +316,14 @@ def dream_prophet(dream_score_res, lib_cols, disc_model, top_k, n_threads, seed,
     augmented_data_grouped.loc[:, "Intensity"] = list(augmented_data_grouped.apply(lambda df: quant(df["peak_group_rank"], 
                                                                                               df["ms2_areas"], 
                                                                                               df["lib_pearsons"]), axis = 1))
+
+    # add
+    augmented_data_grouped.loc[:, "Intensity_self"] = list(augmented_data_grouped.apply(lambda df: quant(df["peak_group_rank"], 
+                                                                                                         df["self_areas"], 
+                                                                                                         df["self_pearsons"]), axis = 1))
+    augmented_data_grouped.loc[:, "Intensity_total"] = augmented_data_grouped.loc[:, "Intensity"] + augmented_data_grouped.loc[:, "Intensity_self"]
+    # add done
+
     augmented_data_grouped.to_csv(os.path.join(disc_dir, "DreamDIA_all_results.tsv"), sep = "\t", index = False)
     fdrs, final_cut = calc_score_cut(augmented_data_grouped, score_column = "dr_score", label_column = "label", cut_off = fdr_precursor, logger = logger, plot = True, plot_name = os.path.join(disc_dir, "optimal_score_distribution.pdf"))
     fdr_data = augmented_data_grouped[augmented_data_grouped["dr_score"] > final_cut]

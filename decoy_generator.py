@@ -13,7 +13,7 @@ def shuffle_seq(seq = None, seed = None):
     else:
         l = list(seq)
         random.seed(seed)
-        for i in range(len(l) - 1, 0, -1) :
+        for i in range(len(l) - 1, 0, -1):
             j = int(random.random() * (i + 1))
             if i == j:
                 continue
@@ -21,6 +21,36 @@ def shuffle_seq(seq = None, seed = None):
                 (l[i], l[j]) = (l[j], l[i])
 
         return tuple(l)
+
+def reverse(seq):
+    return seq[::-1]
+
+def shift_seq(seq):
+    i = len(seq) // 2
+    return seq[i::] + seq[:i:]
+
+def mutate_seq(seq):
+    mutations = {"G" : "L", 
+                 "A" : "L", 
+                 "V" : "L", 
+                 "L" : "V", 
+                 "I" : "V", 
+                 "F" : "L", 
+                 "M" : "L", 
+                 "P" : "L", 
+                 "W" : "L", 
+                 "S" : "T", 
+                 "C" : "S", 
+                 "T" : "S", 
+                 "Y" : "S", 
+                 "H" : "S", 
+                 "K" : "L", 
+                 "R" : "L", 
+                 "Q" : "N", 
+                 "E" : "D", 
+                 "N" : "Q", 
+                 "D" : "E"}
+    return [seq[0], mutations[seq[1]]] + seq[2:-2] + [mutations[seq[-2]], seq[-1]]
 
 def get_mod_indice(sort_base):
     cursor, lock = -1, 0
@@ -40,7 +70,7 @@ def get_mod_indice(sort_base):
             mod += sort_base[i]
     return poses, mods
 
-def decoy_generator(library, lib_cols, precursor_indice, original_colnames, result_collector, fixed_colnames, seed):
+def decoy_generator(library, lib_cols, decoy_method, precursor_indice, original_colnames, result_collector, fixed_colnames, seed):
     product_mz, peptide_sequence, full_uniMod_peptide_name = [], [], []
     transition_group_id, decoy, protein_name = [], [], []
     transition_name, peptide_group_label = [], []
@@ -57,43 +87,96 @@ def decoy_generator(library, lib_cols, precursor_indice, original_colnames, resu
         
         target_fullseq = list(target_record[lib_cols["FULL_SEQUENCE_COL"]])[0]
         target_pureseq = list(target_record[lib_cols["PURE_SEQUENCE_COL"]])[0]
-        unimod5, KR_end, KR_mod_end = False, False, False
-        
-        sort_base = target_fullseq[:]
-        if sort_base.startswith("(UniMod:5)"):
-            unimod5 = True
-            sort_base = sort_base[10:]
-        if sort_base[-1] in ["K", "R"]:
-            KR_end = sort_base[-1]
-            sort_base = sort_base[:-1]
-        elif (sort_base.endswith("(UniMod:259)") or sort_base.endswith("(UniMod:267)")):
-            KR_mod_end = sort_base[-13:]
-            sort_base = sort_base[:-13]
+
+        if decoy_method in ["shuffle", "pseudo_reverse", "shift"]:
+            unimod5, KR_end, KR_mod_end = False, False, False
             
-        mod_indice, mod_list = get_mod_indice(sort_base)
+            sort_base = target_fullseq[:]
+            if sort_base.startswith("(UniMod:5)"):
+                unimod5 = True
+                sort_base = sort_base[10:]
+            if sort_base[-1] in ["K", "R"]:
+                KR_end = sort_base[-1]
+                sort_base = sort_base[:-1]
+            elif (sort_base.endswith("(UniMod:259)") or sort_base.endswith("(UniMod:267)")):
+                KR_mod_end = sort_base[-13:]
+                sort_base = sort_base[:-13]
+                
+            mod_indice, mod_list = get_mod_indice(sort_base)
+                
+            if KR_end or KR_mod_end:
+                pure_seq_list = [i for i in target_pureseq[:-1]]
+            else:
+                pure_seq_list = [i for i in target_pureseq]
             
-        if KR_end or KR_mod_end:
-            pure_seq_list = [i for i in target_pureseq[:-1]]
-        else:
+            seq_list = pure_seq_list[:]
+            for mod_id, mod in zip(mod_indice, mod_list):
+                seq_list[mod_id] += mod
+            
+            if decoy_method == "shuffle":
+                shuffled_indice = shuffle_seq([i for i in range(len(seq_list))], seed = seed)
+            elif decoy_method == "pseudo_reverse":
+                shuffled_indice = reverse([i for i in range(len(seq_list))])
+            elif decoy_method == "shift":
+                shuffled_indice = shift_seq([i for i in range(len(seq_list))])
+            decoy_fullseq = "".join([seq_list[i] for i in shuffled_indice])
+            decoy_pureseq = "".join([pure_seq_list[i] for i in shuffled_indice])
+               
+            if unimod5:
+                decoy_fullseq = "(UniMod:5)" + decoy_fullseq
+            if KR_end:
+                decoy_fullseq += KR_end
+                decoy_pureseq += KR_end
+            elif KR_mod_end:
+                decoy_fullseq += KR_mod_end
+                decoy_pureseq += KR_mod_end[0]
+
+        elif decoy_method == "reverse":
+            unimod5 = False
+            
+            sort_base = target_fullseq[:]
+            if sort_base.startswith("(UniMod:5)"):
+                unimod5 = True
+                sort_base = sort_base[10:]
+                
+            mod_indice, mod_list = get_mod_indice(sort_base)
+                
             pure_seq_list = [i for i in target_pureseq]
-        
-        seq_list = pure_seq_list[:]
-        for mod_id, mod in zip(mod_indice, mod_list):
-            seq_list[mod_id] += mod
-        
-        shuffled_indice = shuffle_seq([i for i in range(len(seq_list))], seed = seed)
-        decoy_fullseq = "".join([seq_list[i] for i in shuffled_indice])
-        decoy_pureseq = "".join([pure_seq_list[i] for i in shuffled_indice])
-        
-        if unimod5:
-            decoy_fullseq = "(UniMod:5)" + decoy_fullseq
-        if KR_end:
-            decoy_fullseq += KR_end
-            decoy_pureseq += KR_end
-        elif KR_mod_end:
-            decoy_fullseq += KR_mod_end
-            decoy_pureseq += KR_mod_end[0]
-        
+            
+            seq_list = pure_seq_list[:]
+            for mod_id, mod in zip(mod_indice, mod_list):
+                seq_list[mod_id] += mod
+            
+            shuffled_indice = reverse([i for i in range(len(seq_list))])
+            decoy_fullseq = "".join([seq_list[i] for i in shuffled_indice])
+            decoy_pureseq = "".join([pure_seq_list[i] for i in shuffled_indice])
+               
+            if unimod5:
+                decoy_fullseq = "(UniMod:5)" + decoy_fullseq
+
+        elif decoy_method == "mutate":
+            unimod5 = False
+            
+            sort_base = target_fullseq[:]
+            if sort_base.startswith("(UniMod:5)"):
+                unimod5 = True
+                sort_base = sort_base[10:]
+                
+            mod_indice, mod_list = get_mod_indice(sort_base)
+                
+            pure_seq_list = [i for i in target_pureseq]
+            mutated_pure_seq_list = mutate_seq(pure_seq_list)
+            
+            mutated_seq_list = mutated_pure_seq_list[:]
+            for mod_id, mod in zip(mod_indice, mod_list):
+                mutated_seq_list[mod_id] += mod
+
+            decoy_fullseq = "".join(mutated_seq_list)
+            decoy_pureseq = "".join(mutated_pure_seq_list)
+
+            if unimod5:
+                decoy_fullseq = "(UniMod:5)" + decoy_fullseq
+      
         for charge, tp, series in zip(target_record[lib_cols["FRAGMENT_CHARGE_COL"]], target_record[lib_cols["FRAGMENT_TYPE_COL"]], target_record[lib_cols["FRAGMENT_SERIES_COL"]]):
             product_mz.append(calc_fragment_mz(decoy_fullseq, decoy_pureseq, charge, "%s%d" % (tp, series)))
             peptide_sequence.append(decoy_pureseq)
@@ -112,7 +195,7 @@ def decoy_generator(library, lib_cols, precursor_indice, original_colnames, resu
                              transition_group_id, decoy, protein_name, transition_name, 
                              peptide_group_label, library.iloc[valid_indice, :].loc[:, fixed_colnames]])
 
-def generate_decoys(lib, do_not_output_library, n_threads, seed, mz_min, mz_max, n_frags_each_precursor, logger):
+def generate_decoys(lib, do_not_output_library, n_threads, seed, mz_min, mz_max, n_frags_each_precursor, decoy_method, logger):
     output_filename = os.path.join(os.path.dirname(lib), os.path.basename(lib)[:-4] + ".DreamDIA.with_decoys.tsv")
 
     lib_cols, library = load_library(lib)
@@ -154,7 +237,7 @@ def generate_decoys(lib, do_not_output_library, n_threads, seed, mz_min, mz_max,
     for i, chunk_index in enumerate(chunk_indice):
         precursor_index = [precursor_indice[idx] for idx in chunk_index]
         p = multiprocessing.Process(target = decoy_generator, 
-                                    args = (library, lib_cols, precursor_index, original_colnames, result_collectors[i], fixed_colnames, seed, ))
+                                    args = (library, lib_cols, decoy_method, precursor_index, original_colnames, result_collectors[i], fixed_colnames, seed, ))
         generators.append(p)
         p.daemon = True
         p.start()

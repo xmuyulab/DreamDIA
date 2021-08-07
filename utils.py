@@ -235,3 +235,10 @@ def calc_pearson_sums(lib_xics):
         for std_index, pearson_sum in zip(std_indice, pearson_sums_part):
             pearson_sums[std_index] = pearson_sum
     return std_indice, pearson_sums
+def adjust_cycle(frag_matrix, n_cycles):
+    if frag_matrix.shape[1] < n_cycles:
+        new_matrix = np.zeros((frag_matrix.shape[0], n_cycles))
+        new_matrix[:, :frag_matrix.shape[1]] = frag_matrix
+        return new_matrix
+    else:
+        return frag_matrix[:, :n_cycles]

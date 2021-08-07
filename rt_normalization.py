@@ -14,7 +14,7 @@ from scipy.stats import pearsonr
 import tools_cython as tools
 import statsmodels.api as sm
 from mz_calculator import calc_fragment_mz, calc_all_fragment_mzs
-from utils import calc_win_id, calc_XIC, filter_matrix, adjust_size, calc_pearson, calc_pearson_sums
+from utils import calc_win_id, calc_XIC, filter_matrix, adjust_size, calc_pearson, calc_pearson_sums, adjust_cycle
 class IRT_Precursor:
     def __init__(self, precursor_id, full_sequence, charge, precursor_mz, iRT, protein_name):
         self.precursor_id = precursor_id
@@ -157,6 +157,24 @@ def extract_irt_xics(ms1, ms2, win_range, extract_queue, precursor_list,
                             n_lib_frags + n_self_frags + n_qt3_frags + n_ms1_frags + n_iso_frags + n_light_frags + lib_matrix_1.shape[0])
             part8_indice = (n_lib_frags + n_self_frags + n_qt3_frags + n_ms1_frags + n_iso_frags + n_light_frags + n_lib_frags, 
                             n_lib_frags + n_self_frags + n_qt3_frags + n_ms1_frags + n_iso_frags + n_light_frags + n_lib_frags + lib_matrix_2.shape[0])
+
+            if lib_matrix.shape[1] != model_cycles:
+                lib_matrix = adjust_cycle(lib_matrix, model_cycles)
+            if self_matrix.shape[1] != model_cycles:
+                self_matrix = adjust_cycle(self_matrix, model_cycles)
+            if qt3_matrix.shape[1] != model_cycles:
+                qt3_matrix = adjust_cycle(qt3_matrix, model_cycles)
+            if ms1_matrix.shape[1] != model_cycles:
+                ms1_matrix = adjust_cycle(ms1_matrix, model_cycles)
+            if iso_matrix.shape[1] != model_cycles:
+                iso_matrix = adjust_cycle(iso_matrix, model_cycles)
+            if light_matrix.shape[1] != model_cycles:
+                light_matrix = adjust_cycle(light_matrix, model_cycles)
+            if lib_matrix_1.shape[1] != model_cycles:
+                lib_matrix_1 = adjust_cycle(lib_matrix_1, model_cycles)
+            if lib_matrix_2.shape[1] != model_cycles:
+                lib_matrix_2 = adjust_cycle(lib_matrix_2, model_cycles)
+
             training_matrix[part1_indice[0] : part1_indice[1], :] = lib_matrix
             training_matrix[part2_indice[0] : part2_indice[1], :] = self_matrix
             training_matrix[part3_indice[0] : part3_indice[1], :] = qt3_matrix

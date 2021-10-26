@@ -178,6 +178,6 @@ DreamDIA-XMBD needs a tab separated window setting file **without overlapping** 
 
 DreamDIA-XMBD outputs peptide and protein identification and quantification results. An empty directory is suggested for the `--out` argument to save all of the output files.
 
-#### 5. Advanced: train your own deep representation models
+#### 5*. Advanced: train your own deep representation models
 
 See the guidance in `Train_customized_models.ipynb` to train your own deep representation models.

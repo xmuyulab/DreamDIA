@@ -337,7 +337,7 @@ def dream_prophet(dream_score_res, lib_cols, disc_model, top_k, n_threads, seed,
         for target in list(stats_info_targets.index):
             if stats_info_targets[target] >= 3:
                 if "DECOY_" + target in stats_info_decoys:
-                    real_protein_fdr = stats_info_targets[target] / (stats_info_targets[target] + stats_info_decoys["DECOY_" + target])
+                    real_protein_fdr = stats_info_decoys["DECOY_" + target] / (stats_info_targets[target] + stats_info_decoys["DECOY_" + target])
                     if real_protein_fdr < fdr_protein:
                         passed_proteins.append(target)
                         passed_proteins_this_part.append(target)

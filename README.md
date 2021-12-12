@@ -142,3 +142,7 @@ DreamDIA-XMBD outputs peptide and protein identification and quantification resu
 #### 4*. Advanced: train your own deep representation models
 
 See the guidance in `Train_customized_models.ipynb` to train your own deep representation models.
+
+## 5. Cite this article
+
+Gao, M., Yang, W., Li, C. et al. Deep representation features from DreamDIA<sup>XMBD</sup> improve the analysis of data-independent acquisition proteomics. Commun Biol 4, 1190 (2021). https://doi.org/10.1038/s42003-021-02726-6

@@ -9,13 +9,13 @@ Software for data-independent acquisition (DIA) data analysis with deep represen
 1. Pull the docker image from DockerHub.
 
 ```shell
-docker pull mingxuangao/dreamdia:v2.0.2
+docker pull mingxuangao/dreamdia:v2.0.3
 ```
 
 2. Enter a container for testing.
 
 ```shell
-docker run -it --name dreamdia_example --gpus all -v /YOUR/OWN/WORK/PATH:/tmp/work mingxuangao/dreamdia:v2.0.2 /bin/bash
+docker run -it --name dreamdia_example --gpus all -v /YOUR/OWN/WORK/PATH:/tmp/work mingxuangao/dreamdia:v2.0.3 /bin/bash
 ```
 
 * Using the argument `--gpus all` will considerably accelerate the DreamDIA-XMBD pipeline if you have some GPUs. 
@@ -30,7 +30,7 @@ source activate keras
 
 ```shell
 cd /tmp/dreamdia_example
-python ../Dream-DIA/DreamDIA.py dreamscore --file_dir raw_data --lib lib.tsv --win win.tsv --out example_results
+python ../Dream-DIA/DreamDIA.py dreamscore --file_dir raw_data --lib lib.tsv --out example_results
 ```
 
 The testing results will be in `example_results`.
@@ -76,7 +76,7 @@ conda install -y pyteomics -c bioconda
 ```
 
 ### Download
-https://github.com/xmuyulab/DreamDIA-XMBD/releases/tag/v2.0.2
+https://github.com/xmuyulab/DreamDIA-XMBD/releases/tag/v2.0.3
 
 ### Installation
 
@@ -104,7 +104,7 @@ python DreamDIA-XMBD-vXXX/DreamDIA.py dreamscore --help
 ```
 
 ```bash
-python DreamDIA-XMBD-vXXX/DreamDIA.py dreamscore --file_dir rawdata_dir --lib library.tsv --win win.tsv --out output_dir
+python DreamDIA-XMBD-vXXX/DreamDIA.py dreamscore --file_dir rawdata_dir --lib library.tsv --out output_dir
 ```
 
 ## 4. Notes
@@ -119,7 +119,7 @@ python DreamDIA-XMBD-vXXX/DreamDIA.py dreamscore --file_dir rawdata_dir --lib li
 
   ```shell
   # /tmp/dreamdia_example
-  python ../Dream-DIA/DreamDIA.py dreamscore --file_dir raw_data_raw --lib lib.tsv --win win.tsv --out example_results_raw
+  python ../Dream-DIA/DreamDIA.py dreamscore --file_dir raw_data_raw --lib lib.tsv --out example_results_raw
   ```
 
 All raw data files should be at the same directory as below. 
@@ -135,49 +135,10 @@ All raw data files should be at the same directory as below.
 
 Only .tsv libraries are supported. All of the fields required by DreamDIA-XMBD are listed in `Dream-DIA/lib_col_settings`. Users can modify this file to adjust their own spectral libraries.
 
-#### 3. window setting file
-
-DreamDIA-XMBD needs a tab separated window setting file **without overlapping** among the isolation windows as OpenSWATH. An example window setting file for classical SWATH acquisition strategy is shown below.
-
-```
-399     424.5
-424.5   449.5
-449.5   474.5
-474.5   499.5
-499.5   524.5
-524.5   549.5
-549.5   574.5
-574.5   599.5
-599.5   624.5
-624.5   649.5
-649.5   674.5
-674.5   699.5
-699.5   724.5
-724.5   749.5
-749.5   774.5
-774.5   799.5
-799.5   824.5
-824.5   849.5
-849.5   874.5
-874.5   899.5
-899.5   924.5
-924.5   949.5
-949.5   974.5
-974.5   999.5
-999.5   1024.5
-1024.5  1049.5
-1049.5  1074.5
-1074.5  1099.5
-1099.5  1124.5
-1124.5  1149.5
-1149.5  1174.5
-1174.5  1199.5
-```
-
-#### 4. output
+#### 3. output
 
 DreamDIA-XMBD outputs peptide and protein identification and quantification results. An empty directory is suggested for the `--out` argument to save all of the output files.
 
-#### 5*. Advanced: train your own deep representation models
+#### 4*. Advanced: train your own deep representation models
 
 See the guidance in `Train_customized_models.ipynb` to train your own deep representation models.

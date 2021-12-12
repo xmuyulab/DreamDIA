@@ -6,7 +6,7 @@ CONTEXT_SETTINGS = dict(help_option_names = ['-h', '--help'], max_content_width 
 def print_version(ctx, param, value):
     if not value or ctx.resilient_parsing:
         return
-    click.echo('DreamDIA-XMBD Version 2.0.2')
+    click.echo('DreamDIA-XMBD Version 2.0.3')
     ctx.exit()
 @click.group(context_settings = CONTEXT_SETTINGS)
 @click.option('--version', is_flag = True, callback = print_version, expose_value = False, is_eager = True, help = "Print version and exit.")
@@ -15,7 +15,6 @@ def dreamdia():
 @dreamdia.command(context_settings = CONTEXT_SETTINGS)
 @click.option("--file_dir", required = True, type = click.Path(exists = True), help = "Directory that contains only DIA data files. Centroided .mzXML, .mzML or .raw files from Thermo Fisher equipments are supported. (For Linux systems, `mono` tool has to be installed for the supporting of .raw files. https://www.mono-project.com/download/stable/#download-lin)")
 @click.option("--lib", required = True, type = click.Path(exists = True), help = "File name of the spectral library. .tsv or .csv formats are supported.")
-@click.option("--win", required = True, type = click.Path(exists = True), help = "Window settings of the acquisition with no overlaps. Each row has two numbers that describe the start and the end of a window, which are separated by a tab.")
 @click.option("--out", required = True, type = click.Path(exists = False), help = "Directory for output files.")
 @click.option("--n_threads", default = 32, show_default = True, type = int, help = "Number of threads.")
 @click.option("--seed", default = 123, show_default = True, type = int, help = "Random seed for decoy generation.")
@@ -46,7 +45,7 @@ def dreamdia():
 @click.option("--score2_cutoff", default = "0.15", show_default = True, type = float, help = "Cut off value of score2.")
 @click.option("--out_chrom", is_flag = True, help = "Whether to output chromatograms for debugging.")
 @click.option("--decoy_method", default = "shuffle", show_default = True, type = click.Choice(["shuffle", "reverse", "pseudo_reverse", "shift", "mutate"]), help = "Decoy generation method.")
-def dreamScore(file_dir, lib, win, out, n_threads, seed, mz_unit, mz_min, mz_max, mz_tol_ms1, mz_tol_ms2, fdr_precursor, fdr_protein, n_irt, top_k, n_cycles, n_frags_each_precursor, do_not_output_library, model_cycles, n_lib_frags, n_self_frags, n_qt3_frags, n_ms1_frags, n_iso_frags, n_light_frags, prophet_mode, disc_model, dream_indicators, rt_norm_model, score0_cutoff, score2_cutoff, out_chrom, decoy_method):    
-    dream_score(file_dir, lib, win, out, n_threads, seed, mz_unit, mz_min, mz_max, mz_tol_ms1, mz_tol_ms2, fdr_precursor, fdr_protein, n_irt, top_k, n_cycles, n_frags_each_precursor, do_not_output_library, model_cycles, n_lib_frags, n_self_frags, n_qt3_frags, n_ms1_frags, n_iso_frags, n_light_frags, prophet_mode, disc_model, dream_indicators, rt_norm_model, score0_cutoff, score2_cutoff, out_chrom, decoy_method)
+def dreamScore(file_dir, lib, out, n_threads, seed, mz_unit, mz_min, mz_max, mz_tol_ms1, mz_tol_ms2, fdr_precursor, fdr_protein, n_irt, top_k, n_cycles, n_frags_each_precursor, do_not_output_library, model_cycles, n_lib_frags, n_self_frags, n_qt3_frags, n_ms1_frags, n_iso_frags, n_light_frags, prophet_mode, disc_model, dream_indicators, rt_norm_model, score0_cutoff, score2_cutoff, out_chrom, decoy_method):    
+    dream_score(file_dir, lib, out, n_threads, seed, mz_unit, mz_min, mz_max, mz_tol_ms1, mz_tol_ms2, fdr_precursor, fdr_protein, n_irt, top_k, n_cycles, n_frags_each_precursor, do_not_output_library, model_cycles, n_lib_frags, n_self_frags, n_qt3_frags, n_ms1_frags, n_iso_frags, n_light_frags, prophet_mode, disc_model, dream_indicators, rt_norm_model, score0_cutoff, score2_cutoff, out_chrom, decoy_method)
 if __name__ == "__main__":
     dreamdia()

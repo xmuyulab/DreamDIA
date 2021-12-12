@@ -106,7 +106,7 @@ def filter_spectrum(spectrum, mz_min, mz_max):
     return mz_array, intensity_array
 def calc_win_id(precursor_mz, win_range):
     return bisect.bisect(win_range[:,0], precursor_mz) - 1
-def load_rawdata(rawdata_file, win_file, mz_min, mz_max):
+def load_rawdata(rawdata_file, mz_min, mz_max):
     if rawdata_file.endswith(".mzXML"):
         rawdata_reader = mzxml.MzXML(rawdata_file)
         mslevel_string = "msLevel"
@@ -114,6 +114,8 @@ def load_rawdata(rawdata_file, win_file, mz_min, mz_max):
             return spectrum["retentionTime"]
         def get_precursor_mz_from_rawdata_spectrum(spectrum):
             return spectrum['precursorMz'][0]['precursorMz']
+        def get_winWidth_from_rawdata_spectrum(spectrum):
+            return spectrum['precursorMz'][0]['windowWideness']
     elif rawdata_file.endswith(".mzML"):
         rawdata_reader = mzml.MzML(rawdata_file)
         mslevel_string = "ms level"
@@ -121,9 +123,40 @@ def load_rawdata(rawdata_file, win_file, mz_min, mz_max):
             return spectrum["scanList"]["scan"][0]["scan start time"]
         def get_precursor_mz_from_rawdata_spectrum(spectrum):
             return spectrum["precursorList"]["precursor"][0]["selectedIonList"]["selectedIon"][0]['selected ion m/z']
+        def get_precursor_leftBound_from_rawdata_spectrum(spectrum):
+            return spectrum["precursorList"]["precursor"][0]["isolationWindow"]["isolation window lower offset"]
     else:
         raise Exception("Invalid rawdata file: %s !\nOnly mzXML and mzML files are supported!" % rawdata_file)   
-    win_range = np.loadtxt(win_file)
+    def win_calculator(rawdata_reader, mslevel_string):
+        raw_win = []
+        flag = 0
+        for spectrum in rawdata_reader:
+            if spectrum[mslevel_string] == 1:
+                flag += 1
+            else:
+                if flag == 0:
+                    continue
+                elif flag == 1:
+                    p_mz = get_precursor_mz_from_rawdata_spectrum(spectrum)
+                    if mslevel_string == "msLevel":
+                        p_width = get_winWidth_from_rawdata_spectrum(spectrum)
+                    else:
+                        p_width = get_precursor_leftBound_from_rawdata_spectrum(spectrum) * 2
+                    raw_win.append([p_mz, p_width])
+                else:
+                    rawdata_reader.reset()
+                    break
+        raw_win = list(map(lambda x : [x[0] - x[1] / 2, x[0] + x[1] / 2], raw_win))
+        win_range = [raw_win[0][0]]
+        for i in range(len(raw_win) - 1):
+            if raw_win[i][1] > raw_win[i + 1][0]:
+                overlap = raw_win[i][1] - raw_win[i + 1][0]
+                win_range.append(raw_win[i][1] - overlap / 2)
+                win_range.append(raw_win[i + 1][0] + overlap / 2)
+        win_range.append(raw_win[-1][-1])   
+        win_range = np.array([[win_range]]).reshape(-1, 2)   
+        return win_range
+    win_range = win_calculator(rawdata_reader, mslevel_string)
     ms1 = MS1_Chrom()
     ms2 = [MS2_Chrom(i, each_win[0], each_win[1]) for i, each_win in enumerate(win_range)]
     for idx, spectrum in enumerate(rawdata_reader):

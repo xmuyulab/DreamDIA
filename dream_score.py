@@ -10,7 +10,7 @@ from rt_normalization import load_irt_precursors, extract_irt_xics, score_irt, f
 from score_peak_groups import load_precursors, extract_precursors, score_batch
 from dream_prophet import combine_res, dream_prophet
 from utils import load_rawdata, endoIRT_generator, tear_library
-def dream_score(file_dir, lib, win, out, n_threads, seed, mz_unit, mz_min, mz_max, mz_tol_ms1, mz_tol_ms2, fdr_precursor, fdr_protein, n_irt, top_k, n_cycles, n_frags_each_precursor, do_not_output_library, model_cycles, n_lib_frags, n_self_frags, n_qt3_frags, n_ms1_frags, n_iso_frags, n_light_frags, prophet_mode, disc_model, dream_indicators, rt_norm_model, score0_cutoff, score2_cutoff, out_chrom, decoy_method):
+def dream_score(file_dir, lib, out, n_threads, seed, mz_unit, mz_min, mz_max, mz_tol_ms1, mz_tol_ms2, fdr_precursor, fdr_protein, n_irt, top_k, n_cycles, n_frags_each_precursor, do_not_output_library, model_cycles, n_lib_frags, n_self_frags, n_qt3_frags, n_ms1_frags, n_iso_frags, n_light_frags, prophet_mode, disc_model, dream_indicators, rt_norm_model, score0_cutoff, score2_cutoff, out_chrom, decoy_method):
     logging.basicConfig(level = logging.INFO, format = "DreamDIA-XMBD: %(asctime)s - %(levelname)s - %(message)s")
     logger = logging.getLogger()
     logger.info("Welcome to DreamDIA-XMBD!")
@@ -65,13 +65,13 @@ def dream_score(file_dir, lib, win, out, n_threads, seed, mz_unit, mz_min, mz_ma
             if convert_status != 0:
                 logger.info("Error!!!: File format conversion failed for %s" % rawdata_file)
                 continue           
-            ms1, ms2, win_range = load_rawdata(os.path.join(file_dir, rawdata_prefix + ".mzML"), win, mz_min, mz_max)       
+            ms1, ms2, win_range = load_rawdata(os.path.join(file_dir, rawdata_prefix + ".mzML"), mz_min, mz_max)       
         else:
             if rawdata_file.endswith(".mzML"):
                 rawdata_prefix = rawdata_file[:-5]
             elif rawdata_file.endswith(".mzXML"):
                 rawdata_prefix = rawdata_file[:-6]            
-            ms1, ms2, win_range = load_rawdata(os.path.join(file_dir, rawdata_file), win, mz_min, mz_max)
+            ms1, ms2, win_range = load_rawdata(os.path.join(file_dir, rawdata_file), mz_min, mz_max)
         logger.info("Perform RT normalization...")      
         rt_norm_dir = os.path.join(out, rawdata_prefix + "_" + os.path.basename(lib)[:-4] + "_rt_norm")
         extract_queue = multiprocessing.JoinableQueue(n_threads)

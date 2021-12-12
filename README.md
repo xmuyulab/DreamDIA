@@ -137,7 +137,7 @@ Only .tsv libraries are supported. All of the fields required by DreamDIA<sup>XM
 
 #### 3. output
 
-DreamDIA-XMBD outputs peptide and protein identification and quantification results. An empty directory is suggested for the `--out` argument to save all of the output files.
+DreamDIA<sup>XMBD</sup> outputs peptide and protein identification and quantification results. An empty directory is suggested for the `--out` argument to save all of the output files.
 
 #### 4*. Advanced: train your own deep representation models
 

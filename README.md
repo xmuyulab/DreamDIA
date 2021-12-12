@@ -18,7 +18,7 @@ docker pull mingxuangao/dreamdia:v2.0.3
 docker run -it --name dreamdia_example --gpus all -v /YOUR/OWN/WORK/PATH:/tmp/work mingxuangao/dreamdia:v2.0.3 /bin/bash
 ```
 
-* Using the argument `--gpus all` will considerably accelerate the DreamDIA-XMBD pipeline if you have some GPUs. 
+* Using the argument `--gpus all` will considerably accelerate the DreamDIA<sup>XMBD</sup> pipeline if you have some GPUs. 
 
 3. Activate the conda environment.
 
@@ -54,7 +54,7 @@ statsmodels
 xgboost
 ```
 
-If .raw files are going to be fed directly to DreamDIA-XMBD in Linux systems, [mono](https://www.mono-project.com/download/stable/#download-lin) must be installed.
+If .raw files are going to be fed directly to DreamDIA<sup>XMBD</sup> in Linux systems, [mono](https://www.mono-project.com/download/stable/#download-lin) must be installed.
 
 We recommend to use [Anaconda](https://www.anaconda.com/products/individual#Downloads) to build the environment and install the required libraries as follows.
 
@@ -113,7 +113,7 @@ python DreamDIA-XMBD-vXXX/DreamDIA.py dreamscore --file_dir rawdata_dir --lib li
 
 * Centroided .mzML or .mzXML files are supported at any time. 
 
-* If .raw files are going to be fed directly to DreamDIA-XMBD in Linux systems, [mono](https://www.mono-project.com/download/stable/#download-lin) must be installed first for the data format conversion by ThermoRawFileParser.
+* If .raw files are going to be fed directly to DreamDIA<sup>XMBD</sup> in Linux systems, [mono](https://www.mono-project.com/download/stable/#download-lin) must be installed first for the data format conversion by ThermoRawFileParser.
 
 * You can also use our docker image to process .raw files directly, while it may take some time for data format conversion.
 
@@ -133,7 +133,7 @@ All raw data files should be at the same directory as below.
 
 #### 2. Spectral libraries
 
-Only .tsv libraries are supported. All of the fields required by DreamDIA-XMBD are listed in `Dream-DIA/lib_col_settings`. Users can modify this file to adjust their own spectral libraries.
+Only .tsv libraries are supported. All of the fields required by DreamDIA<sup>XMBD</sup> are listed in `Dream-DIA/lib_col_settings`. Users can modify this file to adjust their own spectral libraries.
 
 #### 3. output
 

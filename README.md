@@ -49,7 +49,7 @@ seaborn
 cython
 scikit-learn
 tensorflow
-keras-gpu
+keras-gpu >= 2.4.3
 statsmodels
 xgboost
 ```

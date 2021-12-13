@@ -115,7 +115,7 @@ python DreamDIA-XMBD-vXXX/DreamDIA.py dreamscore --file_dir rawdata_dir --lib li
 
 * If .raw files are going to be fed directly to DreamDIA<sup>XMBD</sup> in Linux systems, [mono](https://www.mono-project.com/download/stable/#download-lin) must be installed first for the data format conversion by ThermoRawFileParser.
 
-* You can also use our docker image to process .raw files directly, while it may take some time for data format conversion.
+* You can also use our docker image to process .raw files directly (It may take some time for data format conversion).
 
   ```shell
   # /tmp/dreamdia_example

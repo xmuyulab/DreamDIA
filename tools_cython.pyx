@@ -13,7 +13,7 @@ cdef _smooth_array(np.ndarray[np.float_t, ndim=2] arr):
     cdef int xmax = arr.shape[0]
     cdef int ymax = arr.shape[1]
 
-    cdef np.ndarray[np.float_t,ndim=2] new_arr = np.zeros([xmax, ymax], dtype=np.float)
+    cdef np.ndarray[np.float_t,ndim=2] new_arr = np.zeros([xmax, ymax], dtype=np.float64)
     
     cdef int x, y
 

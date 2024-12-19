@@ -1,6 +1,19 @@
+"""
+╔═════════════════════════════════════════════════════╗
+║                 mz_calculator.py                    ║
+╠═════════════════════════════════════════════════════╣
+║           Description: Utility functions for        ║
+║           mass-to-charge ratio calculation          ║
+╠═════════════════════════════════════════════════════╣
+║                Author: Mingxuan Gao                 ║
+║             Contact: mingxuan.gao@utoronto.ca       ║
+╚═════════════════════════════════════════════════════╝
+"""
+
 ## Modified from PECAN's peptideCalculator.py
 import re
 import numpy as np
+
 mono_masses = dict()
 mono_masses['H'] = 1.007825035
 mono_masses['C'] = 12.00000
@@ -43,6 +56,7 @@ residue_composition['X'] = {'H': 11, 'C': 6,  'O': 1, 'N': 1}
 residue_composition['Z'] = {'H':999, 'C':999, 'O':999,'N':999}
 residue_composition['B'] = {'H': 12, '13C': 6,  'O': 1, '15N': 4}
 residue_composition['J'] = {'H': 12, '13C': 6,  'O': 1, '15N': 2}
+
 def precompute_fragment_mass():
     all_seqchars = "ABCDEFGHIJKLMNPQRSTUVWXYZ"
     fragment_mass_precomput = dict()
@@ -52,6 +66,7 @@ def precompute_fragment_mass():
             fragment_mass_aa += residue_composition[aa][el]*mono_masses[el]
         fragment_mass_precomput[aa] = fragment_mass_aa
     return fragment_mass_precomput
+
 FRAGMENT_MASS_DICT = precompute_fragment_mass()
 unimod1_mass = 2 * mono_masses['C'] + mono_masses['O'] + 2 * mono_masses['H']
 unimod4_mass = 57.021464 
@@ -64,6 +79,7 @@ unimod28_mass = -3 * mono_masses['H'] - mono_masses['N']
 unimod35_mass = 15.994915 
 unimod259_mass = mono_masses["13C"] * 6 - mono_masses["C"] * 6 + mono_masses["15N"] * 2 - mono_masses["N"] * 2 
 unimod267_mass = mono_masses["13C"] * 6 - mono_masses["C"] * 6 + mono_masses["15N"] * 4 - mono_masses["N"] * 4 
+
 def calc_fragment_mz(full_seq, pure_peptide_seq, charge, ion_type):
     fragment_length = int(ion_type[1:])   
     if ion_type[0] == "b":
@@ -100,29 +116,36 @@ def calc_fragment_mz(full_seq, pure_peptide_seq, charge, ion_type):
                       unimod26_count * unimod26_mass + 
                       unimod27_count * unimod27_mass)
     return (fragment_mass + (charge * proton_mass)) / charge
+
 def calc_all_fragment_mzs(full_seq, precursor_charge, 
                           fragment_mz_limit = (99, 1801), b_start = 1, y_start = 2, 
-                          return_charges = False):
+                          return_annotations = False):
     fragment_mzs = []
     fragment_charges = []
+    fragment_series = []
     pure_peptide_seq = re.sub(r"\(UniMod:\d+\)", "", full_seq)
     peptide_length = len(pure_peptide_seq)  
     for i in range(b_start, peptide_length + 1):
         if i >= y_start: 
             fragment_mzs.append(calc_fragment_mz(full_seq, pure_peptide_seq, 1, "y%d" % i))
-            fragment_charges.append(1)                       
+            fragment_charges.append(1)      
+            fragment_series.append("y%d" % i)                 
         fragment_mzs.append(calc_fragment_mz(full_seq, pure_peptide_seq, 1, "b%d" % i))
-        fragment_charges.append(1)            
+        fragment_charges.append(1)      
+        fragment_series.append("b%d" % i)      
         if precursor_charge > 2:
             if i >= y_start:
                 fragment_mzs.append(calc_fragment_mz(full_seq, pure_peptide_seq, 2, "y%d" % i))
                 fragment_charges.append(2)
+                fragment_series.append("y%d" % i)
             fragment_mzs.append(calc_fragment_mz(full_seq, pure_peptide_seq, 2, "b%d" % i))
             fragment_charges.append(2)
+            fragment_series.append("b%d" % i)
     fragment_mzs = np.array(fragment_mzs)
     index = (fragment_mzs >= fragment_mz_limit[0]) & (fragment_mzs <= fragment_mz_limit[1])
     fragment_mzs = fragment_mzs[index]
     fragment_charges = np.array(fragment_charges)[index]
-    if return_charges:
-        return fragment_mzs, fragment_charges
-    return fragment_mzs
+    fragment_series = np.array(fragment_series)[index]
+    if return_annotations:
+        return np.array(fragment_mzs), np.array(fragment_charges), np.array(fragment_series)
+    return np.array(fragment_mzs)

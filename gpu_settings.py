@@ -1,17 +1,21 @@
 """
 ╔═════════════════════════════════════════════════════╗
-║                   File: setup.py                    ║
+║                    gpu_settings.py                  ║
 ╠═════════════════════════════════════════════════════╣
-║           Description: DreamDIA installation        ║
+║         Description: Configuration of GPUs          ║
 ╠═════════════════════════════════════════════════════╣
-║                Author: Wenxian Yang                 ║
-║           Contact: mingxuan.gao@utoronto.ca         ║
+║                Author: Mingxuan Gao                 ║
+║             Contact: mingxuan.gao@utoronto.ca       ║
 ╚═════════════════════════════════════════════════════╝
 """
 
-from distutils.core import setup, Extension
-from Cython.Build import cythonize
-import numpy as np
+import tensorflow as tf
 
-ld = Extension(name="tools_cython", sources=["tools_cython.pyx"])
-setup(ext_modules=cythonize(ld),include_dirs=[np.get_include()])
+def set_gpu_memory():
+    gpus = tf.config.experimental.list_physical_devices('GPU')
+    if gpus:
+        try:
+            for gpu in gpus:
+                tf.config.experimental.set_memory_growth(gpu, True)
+        except RuntimeError as e:
+            print(e)

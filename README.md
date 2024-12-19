@@ -1,43 +1,61 @@
-![logo](./figures/Dream-DIA.jpg)
+![logo](./figures/DreamDIA.jpg)
 
-Software for data-independent acquisition (DIA) data analysis with deep representation features.
+**Software for data-independent acquisition (DIA) data analysis with deep representation features and FDR-controlled match-between runs (DreamDIAlignR).**
 
-## 1. Docker image & quick example
 
-### We recommend to use docker containers to avoid complicated installation and compilation.
+
+### New Feature of DreamDIA3: DreamDIAlignR
+
+DreamDIAlignR is a novel cross-run peptide-centric analysis workflow that allows for consistent cross-run peak picking and FDR-controlled peak scoring.
+
+
+
+### 1. Docker image & quick example
+
+*We recommend using Docker containers to simplify installation and avoid complex compilation processes.*
 
 1. Pull the docker image from DockerHub.
 
 ```shell
-docker pull mingxuangao/dreamdia:v2.0.3
+docker pull mingxuangao/dreamdia:v3.2.0
 ```
 
-2. Enter a container for testing.
+2. Start a container.
 
 ```shell
-docker run -it --name dreamdia_example --gpus all -v /YOUR/OWN/WORK/PATH:/tmp/work mingxuangao/dreamdia:v2.0.3 /bin/bash
+docker run -it --name dreamdia_example --gpus all -v /YOUR/OWN/WORK/PATH:/tmp/work mingxuangao/dreamdia:v3.2.0 /bin/bash
 ```
 
-* Using the argument `--gpus all` will considerably accelerate the DreamDIA<sup>XMBD</sup> pipeline if you have some GPUs. 
+* The `--gpus all` argument enables GPU support within the container, which is essential for running the latest version of DreamDIA.
 
-3. Activate the conda environment.
+3. Activate the conda environment for DreamDIA.
 
 ```shell
-source activate keras
+conda activate dreamdia
 ```
 
-4. Run the example.
+4. (optional) Test the availability of GPUs.
 
 ```shell
-cd /tmp/dreamdia_example
-python ../Dream-DIA/DreamDIA.py dreamscore --file_dir raw_data --lib lib.tsv --out example_results
+python /root/check_gpus.py
 ```
 
-The testing results will be in `example_results`.
+5. Run the demo.
 
-## 2. Build from source
+```shell
+# Enter the working directory
+cd
 
-### Requirements
+# Run DreamDIA peptide peak identification module
+python DreamDIA/DreamDIA.py dreamscore --file_dir example_data/raw_data --lib example_data/Spyogenes_library.tsv --out dreamscore_out
+
+# Run DreamDIAlignR
+python DreamDIA/DreamDIA.py dreamprophet --dream_dir dreamscore_out --out dreamdia_out --dreamdialignr --r_home /root/miniconda3/envs/dreamdia/bin/R 
+```
+
+### 2. Build from source
+
+##### Requirements
 
 ```
 Linux
@@ -52,11 +70,14 @@ tensorflow
 keras-gpu >= 2.4.3
 statsmodels
 xgboost
+networkx
+rpy2 >= 3.5
+R >= 4.2.0
 ```
 
-If .raw files are going to be fed directly to DreamDIA<sup>XMBD</sup> in Linux systems, [mono](https://www.mono-project.com/download/stable/#download-lin) must be installed.
+If `.raw` files are to be directly input into DreamDIA on Linux systems, [mono](https://www.mono-project.com/download/stable/#download-lin) must be installed.
 
-We recommend to use [Anaconda](https://www.anaconda.com/products/individual#Downloads) to build the environment and install the required libraries as follows.
+We recommend using [Anaconda](https://www.anaconda.com/products/individual#Downloads) to set up the environment and install the necessary libraries as outlined below.
 
 ```shell
 # Initiate a conda virtual environment called "dreamdia"
@@ -73,56 +94,46 @@ conda install -y cython
 conda install -y seaborn
 conda install -y statsmodels
 conda install -y pyteomics -c bioconda
+conda install -y networkx
+conda install -y r-base=4.2.1 -c conda-forge
+conda install -y rpy2
 ```
 
-### Download
-https://github.com/xmuyulab/DreamDIA-XMBD/releases/tag/v2.0.3
+##### Download
 
-### Installation
+https://github.com/xmuyulab/DreamDIA/releases/tag/v3.2.0
 
-```bash
-cd DreamDIA-XMBD-vXXX
+##### Installation
+
+```shell
+cd DreamDIA
 bash build.sh
 ```
 
-### Run the example
+### 3. Quick start
 
-##### (1) download the example data
-
-https://github.com/xmuyulab/DreamDIA-XMBD/tree/main/example_data
-
-##### (2) run
+The latest version of DreamDIA analysis workflow consists of two steps: `dreamscore` and `dreamprophet`.
 
 ```shell
-python PATH/TO/DreamDIA-XMBD-vXXX/DreamDIA.py dreamscore --file_dir example_data/raw_data --lib example_data/lib.tsv --win example_data/win.tsv --out example_data/example_results
+# Step1
+python DreamDIA-vXXX/DreamDIA.py dreamscore --help
+
+# Step2
+python DreamDIA-vXXX/DreamDIA.py dreamprophet --help
 ```
 
-## 3. Quick start
+`dreamscore` identifies peptide peaks for each provided run ,while `dreamprophet` needs the output of the first step and performs optional match-between-runs and statistical analysis.
 
-```bash
-python DreamDIA-XMBD-vXXX/DreamDIA.py dreamscore --help
-```
+`dreamprophet` does not perform match-between-runs by default. However, if the `--dreamdialignr` and `--r_home` options are specified, the DreamDIAlignR algorithm will be activated and executed.
 
-```bash
-python DreamDIA-XMBD-vXXX/DreamDIA.py dreamscore --file_dir rawdata_dir --lib library.tsv --out output_dir
-```
-
-## 4. Notes
+### 4. Notes
 
 #### 1. DIA raw data files
 
 * Centroided .mzML or .mzXML files are supported at any time. 
+* If .raw files are going to be fed directly to DreamDIA on Linux systems, [mono](https://www.mono-project.com/download/stable/#download-lin) must be installed first for the data format conversion by ThermoRawFileParser.
 
-* If .raw files are going to be fed directly to DreamDIA<sup>XMBD</sup> in Linux systems, [mono](https://www.mono-project.com/download/stable/#download-lin) must be installed first for the data format conversion by ThermoRawFileParser.
-
-* You can also use our docker image to process .raw files directly (It may take some time for data format conversion).
-
-  ```shell
-  # /tmp/dreamdia_example
-  python ../Dream-DIA/DreamDIA.py dreamscore --file_dir raw_data_raw --lib lib.tsv --out example_results_raw
-  ```
-
-All raw data files should be at the same directory as below. 
+All raw data files should be in one folder as shown below. 
 
 ```
 # rawdata_dir/
@@ -133,16 +144,17 @@ All raw data files should be at the same directory as below.
 
 #### 2. Spectral libraries
 
-Only .tsv libraries are supported. All of the fields required by DreamDIA<sup>XMBD</sup> are listed in `Dream-DIA/lib_col_settings`. Users can modify this file to adjust their own spectral libraries.
+Only .tsv libraries are supported. All of the columns required by DreamDIA are listed in `DreamDIA/lib_col_settings`. Users can modify this file to adjust their own spectral libraries.
 
 #### 3. output
 
-DreamDIA<sup>XMBD</sup> outputs peptide and protein identification and quantification results. An empty directory is suggested for the `--out` argument to save all of the output files.
+DreamDIA outputs peptide and protein identification and quantification results. An empty directory is suggested for the `--out` argument to save all of the output files.
 
 #### 4*. Advanced: train your own deep representation models
 
 See the guidance in `Train_customized_models.ipynb` to train your own deep representation models.
 
-## 5. Cite this article
+### 5. Cite this article
 
-Gao, M., Yang, W., Li, C. et al. Deep representation features from DreamDIA<sup>XMBD</sup> improve the analysis of data-independent acquisition proteomics. Commun Biol 4, 1190 (2021). https://doi.org/10.1038/s42003-021-02726-6
+Gao, M., Yang, W., Li, C. et al. Deep representation features from DreamDIA<sup>XMBD</sup> improve the analysis of data-independent acquisition proteomics. *Commun Biol* 4, 1190 (2021). https://doi.org/10.1038/s42003-021-02726-6
+

@@ -1,17 +1,21 @@
 """
 ╔═════════════════════════════════════════════════════╗
-║                   File: setup.py                    ║
+║                     File: art.py                    ║
 ╠═════════════════════════════════════════════════════╣
-║           Description: DreamDIA installation        ║
+║           Description: The logo of DreamDIA         ║
 ╠═════════════════════════════════════════════════════╣
-║                Author: Wenxian Yang                 ║
-║           Contact: mingxuan.gao@utoronto.ca         ║
+║                Author: Mingxuan Gao                 ║
+║             Contact: mingxuan.gao@utoronto.ca       ║
 ╚═════════════════════════════════════════════════════╝
 """
 
-from distutils.core import setup, Extension
-from Cython.Build import cythonize
-import numpy as np
+logo = """
 
-ld = Extension(name="tools_cython", sources=["tools_cython.pyx"])
-setup(ext_modules=cythonize(ld),include_dirs=[np.get_include()])
+___                                  ___    _  _____ 
+(  _`\                               (  _`\ (_)(  _  )
+| | ) | _ __   __     _ _   ___ ___  | | ) || || (_) |
+| | | )( '__)/'__`\ /'_` )/' _ ` _ `\| | | )| ||  _  |
+| |_) || |  (  ___/( (_| || ( ) ( ) || |_) || || | | |
+(____/'(_)  `\____)`\__,_)(_) (_) (_)(____/'(_)(_) (_)    
+                                             
+"""

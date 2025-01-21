@@ -156,5 +156,7 @@ See the guidance in `Train_customized_models.ipynb` to train your own deep repre
 
 ### 5. Cite this article
 
-Gao, M., Yang, W., Li, C. et al. Deep representation features from DreamDIA<sup>XMBD</sup> improve the analysis of data-independent acquisition proteomics. *Commun Biol* 4, 1190 (2021). https://doi.org/10.1038/s42003-021-02726-6
+[1] Gao, M., Yang, W., Li, C. et al., Deep representation features from DreamDIA<sup>XMBD</sup> improve the analysis of data-independent acquisition proteomics. *Commun Biol* 4, 1190 (2021). https://doi.org/10.1038/s42003-021-02726-6
+
+[2] Gao, M., Gupta, S., Yang, W. et al., Scoring information integration with statistical quality control enhanced cross-run analysis of data-independent acquisition proteomics data. *BioRxiv*, 2024. https://www.biorxiv.org/content/10.1101/2024.12.19.629475v1
 

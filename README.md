@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17162114.svg)](https://doi.org/10.5281/zenodo.17162114)
+
 ![logo](./figures/DreamDIA.jpg)
 
 **Software for data-independent acquisition (DIA) data analysis with deep representation features and FDR-controlled match-between runs (DreamDIAlignR).**
